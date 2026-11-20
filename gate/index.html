@@ -15,12 +15,7 @@
 </head>
 <body>
 <!--
-THESIS: The gate phone is a light, not a form. One camera window with pink brackets, one verdict that fills the screen green once and red forever after, readable from arm's length in a noisy entrance.
-OWN-WORLD: Warm paper #F3EBEA, fluoro pink #FF2FA2 brackets and rules, deep blue #1A43B4 ink, verdict green #12844A / red #E0144C; Oswald condensed print voice; riso paper dropouts on filled surfaces.
-STORY: Staff type the 8-character code, pick a gate, point at passes. First scan green, every later scan of that pass red with the time and gate of the first.
-FIRST VIEWPORT: (gate) GatePass wordmark + "Gate Scanner"; event strip; camera window (~58% of the screen) with corner brackets; verdict banner; live "Checked in N / total".
-FORM: Pinned by the user: concept A "gig poster" (ui-concepts/gatepass/gatepass_a_gigposter.png). No seed roll: user-pinned.
-FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+EntryGo Gate Scanner: Optical camera HUD with real-time audio haptic feedback and atomic fraud locks.
 -->
 <main class="app">
   <header class="mast">
@@ -60,6 +55,10 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
       <button class="leave" type="button" id="leaveBtn">Leave</button>
     </div>
     <div class="viewport" id="viewport">
+      <div class="hud-tag">
+        <span class="live-dot"></span>
+        <span>OPTICAL HUD ACTIVE</span>
+      </div>
       <video id="video" playsinline muted></video>
       <div class="brackets" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       <div class="cam-tools">
@@ -78,15 +77,27 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
       <div class="bar"><i id="cBar"></i></div>
     </div>
 
-    <p class="fine" style="margin:10px 0 0">Dead phone or cracked screen? Tap ${search} on the camera to find a guest by name. Camera won't start? Tap ${camera} to scan a photo.</p>
-
-    <h2 class="head section-gap" style="font-size:20px">Last scans</h2>
-    <ul class="recent" id="recent"></ul>
+    <div class="gate-recent" style="margin-top:16px">
+      <h3 class="recent-title" style="font-size:14px;color:#94A3B8;margin-bottom:8px;font-family:var(--f-display);letter-spacing:0.04em">Recent Scans</h3>
+      <ul class="recent-list" id="recent"></ul>
+    </div>
   </section>
 
-  <div class="scallops inked" aria-hidden="true"></div>
-</main>
+  <div id="flash" class="flash" aria-hidden="true"></div>
 
-<div class="flash" id="flash" aria-hidden="true"></div>
+  <!-- find by name modal -->
+  <dialog id="findDlg" class="dlg">
+    <div class="dlg-head">
+      <h3>Find attendee</h3>
+      <button class="icon-btn" type="button" id="closeFind" aria-label="Close">${I.x}</button>
+    </div>
+    <input class="input" type="search" id="findQ" placeholder="Type a name…" autocomplete="off">
+    <ul class="find-list" id="findList"></ul>
+  </dialog>
+
+  <footer class="foot">
+    <span>Made by <a href="https://www.shahdhairyah.in/" rel="noopener">Shah Dhairya H</a></span>
+  </footer>
+</main>
 </body>
 </html>
