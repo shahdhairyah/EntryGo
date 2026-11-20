@@ -3505,3 +3505,89 @@ body:has(.ticket-wrap) .mast {
 .foot-by a:hover {
   text-decoration: underline;
 }
+
+/* ── HOME PAGE COMPACT SINGLE-PAGE VIEW (NO SCROLL) ── */
+body:has(.signin) {
+  overflow-y: hidden !important;
+  height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+body:has(.signin) .app {
+  padding-block: 10px 14px !important;
+  max-height: 98vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+body:has(.signin) .mast {
+  margin-bottom: 6px !important;
+}
+
+body:has(.signin) .signin {
+  margin: auto 0 !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 16px !important;
+  align-items: center !important;
+  max-width: 920px !important;
+  margin-inline: auto !important;
+  width: 100% !important;
+}
+
+@media (min-width: 768px) {
+  body:has(.signin) .signin {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 36px !important;
+  }
+}
+
+body:has(.signin) .hero-poster {
+  aspect-ratio: 16 / 11 !important;
+  max-height: 320px !important;
+  border-radius: 20px !important;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.2) !important;
+}
+
+body:has(.signin) .poster-title {
+  font-size: clamp(32px, 5vw, 48px) !important;
+  line-height: 1.05 !important;
+}
+
+body:has(.signin) .poster-club {
+  font-size: 16px !important;
+  margin-top: 4px !important;
+}
+
+body:has(.signin) .sub {
+  font-size: 15px !important;
+  line-height: 1.45 !important;
+  color: #94A3B8 !important;
+}
+
+body:has(.signin) #google {
+  min-height: 54px !important;
+  font-size: 15px !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.2) !important;
+}
+
+body:has(.signin) .links {
+  margin-top: 6px !important;
+  display: flex !important;
+  gap: 14px !important;
+}
+
+body:has(.signin) .links a {
+  font-size: 13px !important;
+}
+
+body:has(.signin) .foot {
+  padding: 10px 0 !important;
+  margin-top: auto !important;
+}
