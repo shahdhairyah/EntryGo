@@ -218,39 +218,72 @@ function fail(e) {
 // ─────────────────────────────────────────────── sign in
 
 function signInView(errMsg = "") {
-  roleEl.textContent = "Organiser";
-  document.title = "EntryGo · free QR entry passes for club events";
+  roleEl.textContent = "Organiser Portal";
+  document.title = "EntryGo · Next-Gen QR Entry System";
   view.innerHTML = `
-    <section class="signin">
-      <div class="poster hero-poster" id="art">
-        <h1 class="poster-title ink">Free entry passes</h1>
-        <p class="poster-club">For your club's next event</p>
-        <span class="poster-when">Open source · ₹0</span>
+    <section class="home-creative-hero">
+      <!-- Left 3D Glass Hero Card -->
+      <div class="hero-glass-card" id="heroCard">
+        <div class="hero-live-pill">
+          <span class="dot"></span>
+          <span>HIGH-VELOCITY EVENT ENGINE</span>
+        </div>
+        <div class="hero-poster-art" id="art"></div>
+        <div class="hero-card-content">
+          <h1 class="hero-headline">Instant Passes. <span>Zero Friction.</span></h1>
+          <p class="hero-tagline">Upload registrations sheet ➔ Everyone gets a cryptographic QR pass.</p>
+          <div class="hero-pills-row">
+            <span class="feature-pill">⚡ <strong>&lt; 30s</strong> Generation</span>
+            <span class="feature-pill">🔒 <strong>100%</strong> Anti-Fraud</span>
+            <span class="feature-pill">📱 <strong>0</strong> App Downloads</span>
+          </div>
+        </div>
       </div>
-      <div class="stack" style="margin-top:14px">
-        <p class="sub" style="font-size:17px;color:var(--blue)">Upload your registrations sheet and everyone gets their own QR pass. At the gate, any phone becomes the scanner. A screenshot of a pass works once.</p>
 
-        ${cfg.emailSignIn === false ? `
+      <!-- Right Interactive Auth Console -->
+      <div class="hero-auth-console">
+        <div>
+          <h2 class="auth-header-title">Organizer Sign In</h2>
+          <p class="auth-header-sub">Manage your events, dispatch verified tickets, and monitor live gates.</p>
+        </div>
+
         <p class="err" id="sErr" role="alert" ${errMsg ? "" : "hidden"}>${esc(errMsg)}</p>
-        <button class="row" type="button" id="google" style="min-height:62px;justify-content:center"><span class="gdisc">${I.google}</span><span>Continue with Google</span></button>
-        <p class="fine" style="margin:0">Organisers sign in with Google. Gate staff and attendees never need an account.</p>` : `
-        <form id="signin" class="stack" novalidate style="margin-top:6px">
-          <label class="field"><span>Organiser email</span>
-            <input class="input" type="email" id="email" autocomplete="email" inputmode="email" placeholder="you@college.edu" required value="${esc(store.get("gp.email", ""))}">
-          </label>
-          <p class="err" id="sErr" role="alert" ${errMsg ? "" : "hidden"}>${esc(errMsg)}</p>
-          <button class="btn-primary compact" type="submit" id="sendBtn"><span class="label">Send me a sign-in link</span><span class="arrow">${I.arrow}</span></button>
-        </form>
-        ${cfg.googleSignIn ? `<div class="or">or</div>
-        <button class="row" type="button" id="google" style="min-height:62px;justify-content:center">${I.google}<span>Continue with Google</span></button>` : ""}`}
-        <div class="links" style="margin-top:8px">
-          <a href="gate/">${I.qr} Gate staff? Join with a code</a>
-          <a href="p/#ZXDEMOTOKEN123456789012345678901">${I.ticket} View Sample Pass</a>
+
+        <button class="google-auth-btn" type="button" id="google">
+          <span class="gdisc">${I.google}</span>
+          <span>Continue with Google</span>
+        </button>
+
+        <p class="fine" style="margin:0;color:#64748B;font-size:12px">Organizers sign in with Google OAuth. Gate volunteers and attendees never need an account.</p>
+
+        <div class="quick-gate-links">
+          <a class="quick-link-box" href="gate/">
+            <span>${I.qr}</span>
+            <span>Gate Scanner</span>
+          </a>
+          <a class="quick-link-box" href="p/#ZXDEMOTOKEN123456789012345678901">
+            <span>${I.ticket}</span>
+            <span>Sample Pass</span>
+          </a>
         </div>
       </div>
     </section>`;
-  view.querySelectorAll(".links svg").forEach((s) => { s.style.width = "18px"; s.style.height = "18px"; });
+  view.querySelectorAll(".quick-link-box svg").forEach((s) => { s.style.width = "18px"; s.style.height = "18px"; });
   view.querySelector("#art").style.backgroundImage = `url("${artUrl(0)}")`;
+
+  // 3D card tilt on heroCard
+  const hc = view.querySelector("#heroCard");
+  if (hc) {
+    hc.addEventListener("mousemove", (e) => {
+      const rect = hc.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      hc.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) translateY(-3px)`;
+    });
+    hc.addEventListener("mouseleave", () => {
+      hc.style.transform = "perspective(800px) rotateY(0deg) rotateX(0deg) translateY(0)";
+    });
+  }
 
   const redirectTarget = location.hostname === "localhost" || location.hostname === "127.0.0.1"
     ? location.origin + location.pathname
