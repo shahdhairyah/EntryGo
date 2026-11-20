@@ -559,6 +559,7 @@ async function eventView(id) {
         </div>
         <div id="regSlot" class="stack"></div>
         <div class="stat grain" id="stat"></div>
+        <div id="analyticsSlot"></div>
         <div class="gatebox" id="gatebox"></div>
       </div>
       <div class="right stack">
@@ -576,6 +577,7 @@ async function eventView(id) {
 
   renderReg(state);
   renderStat(state);
+  renderAnalytics(state);
   renderGate(state);
   renderPassTools(state);
   renderList(state);
@@ -720,6 +722,98 @@ async function generate(state) {
   if (failed) toast(`Stopped after ${done}: ${failed.message}`, "x");
   else toast(`${plural(done, "pass", "passes")} ready`);
   renderReg(state); renderStat(state); renderPassTools(state); renderList(state);
+}
+
+
+// ── gate analytics & peak rush charts ──
+function renderAnalytics(state) {
+  const slot = view.querySelector("#analyticsSlot");
+  if (!slot) return;
+  const scans = Array.from(state.first.values());
+  const totalChecked = scans.length;
+  const totalBounced = state.bounced || 0;
+
+  // Gate breakdown calculation
+  const gateCounts = {};
+  scans.forEach(s => {
+    const g = s.gate || "Gate 1";
+    gateCounts[g] = (gateCounts[g] || 0) + 1;
+  });
+
+  // Calculate live scan velocity (scans in last 10 minutes)
+  const now = Date.now();
+  const recentScans = scans.filter(s => (now - new Date(s.scanned_at).getTime()) <= 10 * 60 * 1000).length;
+  const velocityPerMin = (recentScans / 10).toFixed(1);
+
+  // Time-slice buckets (e.g. 5 intervals)
+  const buckets = [0, 0, 0, 0, 0];
+  const labels = ["T-40m", "T-30m", "T-20m", "T-10m", "Now"];
+  scans.forEach(s => {
+    const diffMins = Math.floor((now - new Date(s.scanned_at).getTime()) / (10 * 60 * 1000));
+    if (diffMins >= 0 && diffMins < 5) {
+      buckets[4 - diffMins]++;
+    }
+  });
+  const maxBucket = Math.max(...buckets, 1);
+
+  slot.innerHTML = `
+    <div class="analytics-section">
+      <div class="analytics-head">
+        <h3 class="analytics-title">
+          <span>📊</span>
+          <span>Live Gate Analytics & Rush Velocity</span>
+        </h3>
+        <span style="font-size:11px;color:#38BDF8;font-family:monospace;letter-spacing:0.05em">REALTIME TELEMETRY</span>
+      </div>
+
+      <div class="analytics-grid">
+        <div class="stat-kpi-card">
+          <div class="kpi-label">Scan Velocity</div>
+          <div class="kpi-value">${velocityPerMin} <small style="font-size:12px;color:#94A3B8;font-weight:normal">/ min</small></div>
+        </div>
+        <div class="stat-kpi-card">
+          <div class="kpi-label">Active Gates</div>
+          <div class="kpi-value">${Object.keys(gateCounts).length || 1} <small style="font-size:12px;color:#94A3B8;font-weight:normal">online</small></div>
+        </div>
+        <div class="stat-kpi-card">
+          <div class="kpi-label">Fraud Attempts</div>
+          <div class="kpi-value" style="color:${totalBounced ? "#FB7185" : "#34D399"}">${totalBounced} <small style="font-size:12px;color:#94A3B8;font-weight:normal">intercepted</small></div>
+        </div>
+      </div>
+
+      <!-- Velocity Bar Chart -->
+      <div class="velocity-chart-wrap">
+        <div style="font-size:11px;color:#94A3B8;margin-bottom:6px;display:flex;justify-content:space-between">
+          <span>Check-in Volume (Last 45 mins)</span>
+          <span style="color:#38BDF8">Peak: ${maxBucket} scans</span>
+        </div>
+        <div class="chart-bars-row">
+          ${buckets.map((b, i) => `
+            <div class="chart-col">
+              <div class="chart-bar-fill" style="height:${Math.max(6, (b / maxBucket) * 100)}%" title="${b} scans"></div>
+              <span class="chart-bar-label">${labels[i]}</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <!-- Gate Comparison Split -->
+      <div class="gate-bars-wrap">
+        <div style="font-size:11px;color:#94A3B8;margin-top:4px">Gate Throughput Breakdown</div>
+        ${Object.entries(gateCounts).length ? Object.entries(gateCounts).map(([gate, count]) => `
+          <div class="gate-split-row">
+            <span class="gate-split-name">${esc(gate)}</span>
+            <div class="gate-split-track">
+              <div class="gate-split-bar" style="width:${totalChecked ? (count / totalChecked) * 100 : 0}%"></div>
+            </div>
+            <span class="gate-split-count">${count}</span>
+          </div>
+        `).join("") : `
+          <div style="font-size:12px;color:#64748B;padding:8px 0">Waiting for gate staff to start scanning...</div>
+        `}
+      </div>
+    </div>
+  `;
 }
 
 // ── checked-in counter ──
@@ -951,6 +1045,7 @@ function startLive(state) {
       if (li && p) li.outerHTML = rowHtml(state, p);
     } else state.bounced++;
     renderStat(state, true);
+    renderAnalytics(state);
   };
   live = sb.channel(`gp-scans-${id}`)
     .on("postgres_changes", { event: "INSERT", schema: "public", table: "gp_scans", filter: `event_id=eq.${id}` }, (msg) => apply(msg.new))
@@ -963,7 +1058,7 @@ function startLive(state) {
       const before = state.first.size + state.bounced;
       state.first = new Map(); state.bounced = 0;
       for (const s of scans) s.is_first ? state.first.set(s.pass_id, s) : state.bounced++;
-      if (state.first.size + state.bounced !== before) { renderStat(state, true); renderList(state); }
+      if (state.first.size + state.bounced !== before) { renderStat(state, true); renderAnalytics(state); renderList(state); }
     } catch { }
   }, 1000);
 }

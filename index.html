@@ -18,6 +18,16 @@
   <script defer src="config.js"></script>
   <script defer src="vendor/supabase.js"></script>
   <script type="module" src="assets/js/organiser.js"></script>
+
+  <link rel="manifest" href="./manifest.json">
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+  </script>
+
 </head>
 
 <body class="wide">

@@ -12,6 +12,16 @@
 <link rel="stylesheet" href="../assets/css/gatepass.css">
 <script defer src="../config.js"></script>
 <script type="module" src="../assets/js/gate.js"></script>
+
+  <link rel="manifest" href="../manifest.json">
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("../sw.js").catch(() => {});
+      });
+    }
+  </script>
+
 </head>
 <body>
 <!--
