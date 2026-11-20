@@ -256,14 +256,10 @@ function signInView(errMsg = "") {
 
         <p class="fine" style="margin:0;color:#64748B;font-size:12px">Organizers sign in with Google OAuth. Gate volunteers and attendees never need an account.</p>
 
-        <div class="quick-gate-links">
-          <a class="quick-link-box" href="gate/">
+        <div class="quick-gate-links" style="grid-template-columns: 1fr;">
+          <a class="quick-link-box" href="gate/" style="justify-content: center; padding: 12px;">
             <span>${I.qr}</span>
-            <span>Gate Scanner</span>
-          </a>
-          <a class="quick-link-box" href="p/#ZXDEMOTOKEN123456789012345678901">
-            <span>${I.ticket}</span>
-            <span>Sample Pass</span>
+            <span>Gate Scanner (Volunteer Portal)</span>
           </a>
         </div>
       </div>
