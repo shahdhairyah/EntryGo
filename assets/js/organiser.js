@@ -323,7 +323,7 @@ async function eventView(id) {
   } catch (e) { return fail(e); }
 
   passes.sort((a, b) => a.created_at.localeCompare(b.created_at) || a.name.localeCompare(b.name));
-  const state = { ev, passes, first: new Map(), bounced: 0, upload: null, filter: "", shown: 120 };
+  const state = { ev, passes, first: new Map(), bounced: 0, upload: null, filter: "", filterStatus: "all", pageSize: 20, shown: 20 };
   for (const s of scans) s.is_first ? state.first.set(s.pass_id, s) : state.bounced++;
 
   document.title = `${typo(ev.name)} · EntryGo`;
@@ -569,8 +569,12 @@ function sendHref(state, p) {
 
 function renderPassTools(state) {
   const el = view.querySelector("#passTools");
-  view.querySelector("#pcount").textContent = state.passes.length ? plural(state.passes.length, "pass", "passes") : "";
-  if (!state.passes.length) {
+  const total = state.passes.length;
+  const inCount = state.first.size;
+  const outCount = Math.max(0, total - inCount);
+
+  view.querySelector("#pcount").textContent = total ? plural(total, "pass", "passes") : "";
+  if (!total) {
     el.innerHTML = `<div class="empty"><h3>No passes yet</h3><p class="sub" style="color:var(--blue)">Upload the registrations sheet and each row becomes a pass with its own link.</p></div>`;
     return;
   }
@@ -579,8 +583,27 @@ function renderPassTools(state) {
       <button class="btn small" type="button" id="cpAll">${I.copy}Copy all links</button>
       <button class="btn small" type="button" id="csv">${I.download}Export CSV</button>
     </div>
-    <p class="fine" style="margin:0">EntryGo sends nothing. Send each link yourself on WhatsApp or email; every link opens that person's pass.</p>
-    <div class="search"><span>${I.search}</span><input class="input" id="filter" placeholder="Search names" autocomplete="off" value="${esc(state.filter)}"></div>`;
+    <div class="pass-filters-wrap">
+      <div class="search">
+        <span>${I.search}</span>
+        <input class="input" id="filter" placeholder="Search attendee name or contact" autocomplete="off" value="${esc(state.filter)}">
+      </div>
+      <div class="filter-pills-row">
+        <div class="status-pills" id="statusPills" role="tablist" aria-label="Pass status filter">
+          <button type="button" class="pill-btn ${state.filterStatus === "all" ? "active" : ""}" data-status="all">All <span class="pill-badge">${total}</span></button>
+          <button type="button" class="pill-btn pill-in ${state.filterStatus === "in" ? "active" : ""}" data-status="in">Check-in <span class="pill-badge">${inCount}</span></button>
+          <button type="button" class="pill-btn pill-out ${state.filterStatus === "out" ? "active" : ""}" data-status="out">Check-out <span class="pill-badge">${outCount}</span></button>
+        </div>
+        <div class="page-size-pills" id="sizePills" aria-label="Items per page">
+          <span style="font-size:11px;color:#64748B;font-weight:600;padding-left:4px">Show:</span>
+          <button type="button" class="pill-btn ${state.pageSize === 10 ? "active" : ""}" data-size="10">10</button>
+          <button type="button" class="pill-btn ${state.pageSize === 20 ? "active" : ""}" data-size="20">20</button>
+          <button type="button" class="pill-btn ${state.pageSize === 30 ? "active" : ""}" data-size="30">30</button>
+          <button type="button" class="pill-btn ${state.pageSize === 9999 ? "active" : ""}" data-size="9999">All</button>
+        </div>
+      </div>
+    </div>`;
+
   el.querySelector("#cpAll").addEventListener("click", async () => {
     const text = state.passes.map((p) => `${p.name}: ${passUrl(p.token)}`).join("\n");
     (await copyText(text)) ? toast(`${plural(state.passes.length, "link")} copied`) : toast("Couldn't copy. Use Export CSV.", "x");
@@ -593,8 +616,34 @@ function renderPassTools(state) {
     const slug = state.ev.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "event";
     download(`${slug}-passes.csv`, toCsv(rows));
   });
+
   let t;
-  el.querySelector("#filter").addEventListener("input", (e) => { clearTimeout(t); t = setTimeout(() => { state.filter = e.target.value; state.shown = 120; renderList(state); }, 120); });
+  el.querySelector("#filter").addEventListener("input", (e) => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      state.filter = e.target.value;
+      state.shown = state.pageSize;
+      renderList(state);
+    }, 120);
+  });
+
+  el.querySelector("#statusPills").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-status]");
+    if (!btn) return;
+    state.filterStatus = btn.dataset.status;
+    state.shown = state.pageSize;
+    renderPassTools(state);
+    renderList(state);
+  });
+
+  el.querySelector("#sizePills").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-size]");
+    if (!btn) return;
+    state.pageSize = +btn.dataset.size;
+    state.shown = state.pageSize;
+    renderPassTools(state);
+    renderList(state);
+  });
 }
 
 function rowHtml(state, p) {
@@ -603,7 +652,7 @@ function rowHtml(state, p) {
   return `
     <li data-id="${p.id}">
       <p class="pl-name">${esc(p.name)}</p>
-      <p class="pl-meta">${s ? `<span class="in">In ${esc(fmtTime(s.scanned_at))} · ${esc(s.gate)}</span> · ` : ""}${esc(p.contact || "no contact")}</p>
+      <p class="pl-meta">${s ? `<span class="in">✓ In ${esc(fmtTime(s.scanned_at))} · ${esc(s.gate)}</span> · ` : `<span style="color:#64748B">Not checked in</span> · `}${esc(p.contact || "no contact")}</p>
       <div class="pl-actions">
         ${send ? `<a class="icon-btn" href="${esc(send.href)}" target="_blank" rel="noopener" aria-label="${send.label} ${esc(p.name)} their pass" title="${send.label}">${send.icon}</a>` : ""}
         <button class="icon-btn" type="button" data-copy="${esc(p.token)}" aria-label="Copy ${esc(p.name)}'s pass link" title="Copy link">${I.copy}</button>
@@ -615,11 +664,31 @@ function rowHtml(state, p) {
 function renderList(state) {
   const ul = view.querySelector("#plist"), more = view.querySelector("#more");
   const f = state.filter.trim().toLowerCase();
-  const list = f ? state.passes.filter((p) => p.name.toLowerCase().includes(f) || (p.contact || "").toLowerCase().includes(f)) : state.passes;
-  ul.innerHTML = list.slice(0, state.shown).map((p) => rowHtml(state, p)).join("") || (state.passes.length ? `<li><p class="pl-meta">Nobody matches “${esc(state.filter)}”.</p></li>` : "");
+  
+  let list = state.passes;
+  // Apply Search
+  if (f) {
+    list = list.filter((p) => p.name.toLowerCase().includes(f) || (p.contact || "").toLowerCase().includes(f));
+  }
+  // Apply Check-in / Check-out status filter
+  if (state.filterStatus === "in") {
+    list = list.filter((p) => state.first.has(p.id));
+  } else if (state.filterStatus === "out") {
+    list = list.filter((p) => !state.first.has(p.id));
+  }
+
+  const visible = list.slice(0, state.shown);
+  ul.innerHTML = visible.map((p) => rowHtml(state, p)).join("") || (state.passes.length ? `<li><p class="pl-meta" style="text-align:center;padding:16px">No passes match the current filters.</p></li>` : "");
   ul.style.borderTop = ul.innerHTML ? "" : "0";
-  more.innerHTML = list.length > state.shown ? `<button class="btn small" type="button" id="moreBtn">Show ${Math.min(240, list.length - state.shown)} more of ${list.length - state.shown}</button>` : "";
-  more.querySelector("#moreBtn")?.addEventListener("click", () => { state.shown += 240; renderList(state); });
+
+  const remaining = list.length - state.shown;
+  more.innerHTML = remaining > 0 ? `<button class="btn small" type="button" id="moreBtn">Show next ${Math.min(state.pageSize, remaining)} of ${remaining} more</button>` : (list.length > 0 && state.pageSize !== 9999 ? `<p class="fine" style="text-align:center;margin:6px 0 0;color:#64748B">Showing all ${list.length} passes</p>` : "");
+  
+  more.querySelector("#moreBtn")?.addEventListener("click", () => {
+    state.shown += state.pageSize;
+    renderList(state);
+  });
+
   ul.onclick = async (e) => {
     const b = e.target.closest("[data-copy]");
     if (!b) return;
