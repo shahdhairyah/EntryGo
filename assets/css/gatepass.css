@@ -2539,3 +2539,123 @@ body:has(.ticket-wrap) .mast {
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   color: #E2E8F0 !important;
 }
+
+/* ── CREATIVE VISUAL ENHANCEMENTS FOR TICKET PASS ── */
+.ticket {
+  perspective: 1000px;
+  position: relative;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+  animation: ticketEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+@keyframes ticketEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Holographic animated top shimmer line */
+.ticket::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #38BDF8, #818CF8, #F43F5E, #38BDF8);
+  background-size: 300% 100%;
+  animation: holoGlow 4s linear infinite;
+  z-index: 10;
+}
+
+@keyframes holoGlow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+/* Cyber holographic watermark pill */
+.ticket-badge {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(9, 13, 22, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #38BDF8;
+  font-weight: 700;
+  z-index: 10;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+}
+
+.ticket-badge .dot {
+  width: 6px;
+  height: 6px;
+  background: #34D399;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #34D399;
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* Laser scanline sweep on the QR code */
+.ticket .t-qr {
+  position: relative;
+  overflow: hidden;
+}
+
+.ticket .t-qr::after {
+  content: "";
+  position: absolute;
+  width: min(44vw, 175px);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.95), transparent);
+  box-shadow: 0 0 12px #38BDF8, 0 0 4px #fff;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: laserScan 2.6s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: 2px;
+}
+
+@keyframes laserScan {
+  0% {
+    top: 15px;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: calc(100% - 15px);
+    opacity: 0;
+  }
+}
+
+/* 3D tilt interaction for interactive feel */
+@media (hover: hover) {
+  .ticket:hover {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 22px 50px -10px rgba(0, 0, 0, 0.9), 0 0 35px rgba(56, 189, 248, 0.3) !important;
+  }
+}
