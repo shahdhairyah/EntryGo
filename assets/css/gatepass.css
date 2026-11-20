@@ -2952,3 +2952,144 @@ body:has(.ticket-wrap) .mast {
   border-radius: 10px;
   color: inherit;
 }
+
+/* ── CREATIVE EVENT FORM & LIVE PREVIEW (/#/new) ── */
+.form-layout-wrap {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  width: 100%;
+}
+
+@media (min-width: 860px) {
+  .form-layout-wrap {
+    grid-template-columns: 1.15fr 0.85fr;
+    align-items: start;
+  }
+}
+
+.event-live-card {
+  position: sticky;
+  top: 24px;
+  background: linear-gradient(180deg, rgba(22, 30, 49, 0.95) 0%, rgba(13, 18, 30, 0.98) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 24px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.15);
+}
+
+.live-card-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(6, 9, 19, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  font-family: monospace;
+  color: #38BDF8;
+  font-weight: 700;
+  z-index: 5;
+}
+
+.live-card-art {
+  height: 140px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.live-card-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 20%, rgba(13, 18, 30, 0.95) 100%);
+}
+
+.live-card-body {
+  padding: 16px 20px 20px;
+}
+
+.live-card-name {
+  font-family: var(--f-display);
+  font-size: 26px;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.15;
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+
+.live-card-club {
+  font-size: 14px;
+  color: #38BDF8;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.live-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #94A3B8;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 12px;
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Quick Presets Pills */
+.presets-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.preset-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94A3B8;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-chip:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #38BDF8;
+}
+
+/* Art Picker Upgrade */
+.art-pick label {
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  border: 2px solid transparent !important;
+  transition: all 0.25s ease !important;
+}
+
+.art-pick input:checked + img {
+  border-color: #38BDF8 !important;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.5) !important;
+  transform: scale(1.03);
+}
+
+.art-pick label:hover {
+  border-color: rgba(56, 189, 248, 0.4) !important;
+}
