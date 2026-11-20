@@ -3446,3 +3446,62 @@ body:has(.ticket-wrap) .mast {
   font-weight: 700;
   font-family: monospace;
 }
+
+/* ── BRAND SUB-LINE STYLES (HEADER & FOOTER) ── */
+.brand-group {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.brand-by {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #38BDF8;
+  margin-top: 2px;
+  text-decoration: none;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+
+.brand-by:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.foot {
+  text-align: center;
+  padding: 16px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+  color: #94A3B8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.foot-title {
+  font-family: var(--f-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 0.02em;
+}
+
+.foot-by {
+  font-size: 12px;
+  color: #94A3B8;
+}
+
+.foot-by a {
+  color: #38BDF8;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.foot-by a:hover {
+  text-decoration: underline;
+}
