@@ -1,3 +1,101 @@
+
+// ── Rich Email Modal & HTML Template Preview ──
+function openMailPreview(state, p) {
+  const ev = state.ev;
+  const link = passUrl(p.token);
+  const subject = `Your Official Entry Pass for ${ev.name}`;
+  const plainBody = msgFor(state, p);
+
+  // Remove existing modal if any
+  document.querySelector(".mail-modal-overlay")?.remove();
+
+  const modal = document.createElement("div");
+  modal.className = "mail-modal-overlay";
+  modal.innerHTML = `
+    <div class="mail-modal-card">
+      <div class="mail-modal-header">
+        <div class="mail-modal-title">
+          <span>✉️</span>
+          <span>Digital Ticket Email Design</span>
+        </div>
+        <button class="icon-btn" type="button" id="closeMailModal" aria-label="Close" style="width:32px;height:32px">${I.x}</button>
+      </div>
+
+      <div class="mail-preview-container">
+        <div class="mail-email-client-box">
+          <div class="mail-client-header">
+            <div>
+              <div class="mail-client-subject">${esc(subject)}</div>
+              <div class="mail-client-meta">To: <strong>${esc(p.name)}</strong> (${esc(p.contact || "no email set")})</div>
+            </div>
+            <span style="font-size:11px;background:#1E293B;color:#38BDF8;padding:3px 8px;border-radius:6px;font-family:monospace">VERIFIED TICKET</span>
+          </div>
+
+          <div class="mail-ticket-banner">
+            <h2>${esc(ev.name)}</h2>
+            <p style="margin:0;opacity:0.9;font-size:13px">${esc(ev.club || "Hosted Event")}</p>
+          </div>
+
+          <div class="mail-details-grid">
+            <div class="mail-grid-row">
+              <span class="mail-grid-label">👤 Attendee Name</span>
+              <span class="mail-grid-val">${esc(p.name)}</span>
+            </div>
+            <div class="mail-grid-row">
+              <span class="mail-grid-label">📅 Date & Time</span>
+              <span class="mail-grid-val">${esc(fmtWhen(ev.starts_at))}</span>
+            </div>
+            <div class="mail-grid-row">
+              <span class="mail-grid-label">📍 Venue Location</span>
+              <span class="mail-grid-val">${esc(ev.venue || "Main Entrance Gate")}</span>
+            </div>
+            <div class="mail-grid-row">
+              <span class="mail-grid-label">🔒 Security Lock</span>
+              <span class="mail-grid-val" style="color:#34D399">192-bit Cryptographic QR</span>
+            </div>
+          </div>
+
+          <a href="${esc(link)}" target="_blank" rel="noopener" class="mail-cta-button">
+            VIEW DIGITAL PASS & QR CODE →
+          </a>
+
+          <div style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.25);border-radius:10px;padding:12px;font-size:12px;color:#FB7185;line-height:1.5">
+            <strong>⚠️ Gate Check-in Rules:</strong><br>
+            • Turn screen brightness to 100% when presenting QR at the gate.<br>
+            • This pass is valid for <strong>one entry only</strong>. Forwarding or duplicated screenshots will sound an alarm at the scanner.
+          </div>
+        </div>
+      </div>
+
+      <div class="mail-footer-actions">
+        <button class="btn small" type="button" id="copyMailText">${I.copy}Copy Formatted Email</button>
+        ${p.contact && isEmail(p.contact) ? `
+          <a class="btn small primary" href="mailto:${encodeURIComponent(p.contact)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainBody)}" target="_blank" rel="noopener" style="background:#0284C7;color:#fff;border-color:#38BDF8">
+            Open in Email Client
+          </a>
+        ` : `
+          <button class="btn small" type="button" id="copyMailLink">${I.link}Copy Pass Link</button>
+        `}
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  modal.querySelector("#closeMailModal").addEventListener("click", () => modal.remove());
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
+
+  modal.querySelector("#copyMailText").addEventListener("click", async () => {
+    (await copyText(plainBody)) ? toast("Formatted email text copied") : toast("Couldn't copy", "x");
+  });
+
+  modal.querySelector("#copyMailLink")?.addEventListener("click", async () => {
+    (await copyText(link)) ? toast("Pass link copied") : toast("Couldn't copy", "x");
+  });
+}
+
 // Organiser app: sign in, events, registrations → passes, links, gate code, live counter.
 import {
   cfg, configured, ART, artUrl, passUrl, gateUrl, fmtCode, fmtWhen, fmtTime, fmtDay, esc, plural,
@@ -765,7 +863,7 @@ function rowHtml(state, p) {
       <p class="pl-name">${esc(p.name)}</p>
       <p class="pl-meta">${s ? `<span class="in">✓ In ${esc(fmtTime(s.scanned_at))} · ${esc(s.gate)}</span> · ` : `<span style="color:#64748B">Not checked in</span> · `}${esc(p.contact || "no contact")}</p>
       <div class="pl-actions">
-        ${send ? `<a class="icon-btn" href="${esc(send.href)}" target="_blank" rel="noopener" aria-label="${send.label} ${esc(p.name)} their pass" title="${send.label}">${send.icon}</a>` : ""}
+        ${send && send.label === "Email" ? `<button class="icon-btn" type="button" data-preview-mail="${p.id}" aria-label="Preview and send email" title="Preview email">${send.icon}</button>` : (send ? `<a class="icon-btn" href="${esc(send.href)}" target="_blank" rel="noopener" aria-label="${send.label} ${esc(p.name)} their pass" title="${send.label}">${send.icon}</a>` : "")}
         <button class="icon-btn" type="button" data-copy="${esc(p.token)}" aria-label="Copy ${esc(p.name)}'s pass link" title="Copy link">${I.copy}</button>
         <a class="icon-btn" href="${esc(passUrl(p.token))}" target="_blank" rel="noopener" aria-label="Open ${esc(p.name)}'s pass" title="Open pass">${I.open}</a>
       </div>
@@ -801,6 +899,12 @@ function renderList(state) {
   });
 
   ul.onclick = async (e) => {
+    const mailBtn = e.target.closest("[data-preview-mail]");
+    if (mailBtn) {
+      const p = state.passes.find(x => x.id === mailBtn.dataset.previewMail);
+      if (p) openMailPreview(state, p);
+      return;
+    }
     const b = e.target.closest("[data-copy]");
     if (!b) return;
     (await copyText(passUrl(b.dataset.copy))) ? toast("Pass link copied") : toast("Couldn't copy", "x");
