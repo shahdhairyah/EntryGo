@@ -3,8 +3,8 @@
 // The anon key is meant to be public; Row Level Security in schema.sql protects the data.
 // Never put the service_role key here.
 window.GATEPASS = window.ENTRYGO = window.ZENTRYX = {
-  supabaseUrl: "https://nkcmgcunnrqulocdwgxr.supabase.co",
-  supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rY21nY3VubnJxdWxvY2R3Z3hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxMjc3ODksImV4cCI6MjEwNDcwMzc4OX0.jzOZ7JV1X5mLazg7GBKLhISdK17DaecO8qoooXTAzBc",
+  supabaseUrl: "https://pzdjojumxynhlwrwgkbp.supabase.co",
+  supabaseAnonKey: "sb_publishable_8kYROWQuDTwuHw13E7iBsw_TOLgAGAp",
 
   // Organiser sign-in methods.
   // emailSignIn: magic link by email (needs the Email provider on; for more than a few emails an hour, custom SMTP).
