@@ -517,7 +517,7 @@ async function eventView(id) {
   } catch (e) { return fail(e); }
 
   passes.sort((a, b) => a.created_at.localeCompare(b.created_at) || a.name.localeCompare(b.name));
-  const state = { ev, passes, first: new Map(), bounced: 0, upload: null, filter: "", filterStatus: "all", pageSize: 20, shown: 20 };
+  const state = { ev, passes, first: new Map(), bounced: 0, upload: null, filter: "", filterStatus: "all", pageSize: 10, shown: 10 };
   for (const s of scans) s.is_first ? state.first.set(s.pass_id, s) : state.bounced++;
 
   document.title = `${typo(ev.name)} · EntryGo`;
