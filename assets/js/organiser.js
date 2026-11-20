@@ -242,28 +242,124 @@ async function eventForm(id = null) {
   }
   const when = ev.starts_at ? new Date(ev.starts_at) : (() => { const d = nextSaturday(); d.setHours(18, 0, 0, 0); return d; })();
   document.title = `${id ? "Edit" : "New"} event · EntryGo`;
+
   view.innerHTML = `
-    <div class="narrow">
-    <a class="backlink" href="${id ? `#/e/${id}` : "#"}">${I.back}${id ? "Back to the event" : "Your events"}</a>
-    <form id="evForm" class="stack" novalidate>
-      <h1 class="head">${id ? "Edit event" : "New event"}</h1>
-      <label class="field"><span>Event name</span><input class="input" name="name" maxlength="80" required placeholder="e.g. Cyber Summit 2026" value="${esc(ev.name)}"></label>
-      <label class="field"><span>Club</span><input class="input" name="club" maxlength="80" placeholder="e.g. Design & Robotics Club" value="${esc(ev.club)}"></label>
-      <div class="two">
-        <label class="field"><span>Date</span><input class="input" type="date" name="date" required value="${ymd(when)}"></label>
-        <label class="field"><span>Time</span><input class="input" type="time" name="time" required value="${hm(when)}"></label>
-      </div>
-      <label class="field"><span>Venue</span><input class="input" name="venue" maxlength="120" placeholder="e.g. Main Auditorium" value="${esc(ev.venue)}"></label>
-      <fieldset class="field" style="border:0;margin:0;padding:0"><span>Poster art</span>
-        <div class="art-pick">
-          ${ART.map((a, i) => `<label><input type="radio" name="art" value="${i}" ${i === ev.art ? "checked" : ""} aria-label="${a.name}"><img src="${artUrl(i, true)}" alt="" loading="lazy" width="240" height="240"><span class="art-name">${a.name}</span></label>`).join("")}
+    <div style="max-width:1080px;margin:0 auto;width:100%">
+      <a class="backlink" href="${id ? `#/e/${id}` : "#"}">${I.back}${id ? "Back to the event" : "Your events"}</a>
+      <div class="form-layout-wrap">
+        <!-- Form Left -->
+        <form id="evForm" class="stack" novalidate>
+          <div style="display:flex;justify-content:space-between;align-items:flex-end">
+            <h1 class="head" style="margin:0">${id ? "Edit event" : "New event"}</h1>
+            <span style="font-size:12px;color:#38BDF8;font-family:monospace;letter-spacing:0.05em">LIVE SYNC READY</span>
+          </div>
+
+          <label class="field">
+            <div style="display:flex;justify-content:space-between">
+              <span>Event name</span>
+              <span class="fine" id="nameLen">0/80</span>
+            </div>
+            <input class="input" name="name" id="inName" maxlength="80" required placeholder="e.g. Cyber Summit 2026" value="${esc(ev.name)}">
+            <div class="presets-row" id="namePresets">
+              <span style="font-size:11px;color:#64748B;align-self:center">Presets:</span>
+              <button type="button" class="preset-chip" data-val="Annual Tech Symposium 2026">Tech Fest</button>
+              <button type="button" class="preset-chip" data-val="HackNova National Hackathon">Hackathon</button>
+              <button type="button" class="preset-chip" data-val="Electric Waves Live Concert">Music Gig</button>
+              <button type="button" class="preset-chip" data-val="Global AI & Robotics Summit">AI Summit</button>
+            </div>
+          </label>
+
+          <label class="field">
+            <span>Organizing club / host</span>
+            <input class="input" name="club" id="inClub" maxlength="80" placeholder="e.g. Robotics & Computing Club" value="${esc(ev.club)}">
+          </label>
+
+          <div class="two">
+            <label class="field"><span>Date</span><input class="input" type="date" name="date" id="inDate" required value="${ymd(when)}"></label>
+            <label class="field"><span>Time</span><input class="input" type="time" name="time" id="inTime" required value="${hm(when)}"></label>
+          </div>
+
+          <label class="field">
+            <span>Venue location</span>
+            <input class="input" name="venue" id="inVenue" maxlength="120" placeholder="e.g. Main Convention Center, Hall A" value="${esc(ev.venue)}">
+          </label>
+
+          <fieldset class="field" style="border:0;margin:0;padding:0">
+            <span>Select poster artwork</span>
+            <div class="art-pick" id="artPick">
+              ${ART.map((a, i) => `<label><input type="radio" name="art" value="${i}" ${i === ev.art ? "checked" : ""} aria-label="${a.name}"><img src="${artUrl(i, true)}" alt="" loading="lazy" width="240" height="240"><span class="art-name">${a.name}</span></label>`).join("")}
+            </div>
+          </fieldset>
+
+          <p class="err" id="fErr" role="alert" hidden></p>
+          <button class="btn-primary compact" type="submit" id="saveBtn">
+            <span class="label">${id ? "Save changes" : "Create event"}</span>
+            <span class="arrow">${I.arrow}</span>
+          </button>
+        </form>
+
+        <!-- Live Preview Card Right -->
+        <div class="stack" style="gap:14px">
+          <div style="font-size:12px;color:#94A3B8;letter-spacing:0.08em;font-weight:700;text-transform:uppercase">Pass Poster Preview</div>
+          <div class="event-live-card" id="previewCard">
+            <div class="live-card-badge">
+              <span style="width:6px;height:6px;background:#34D399;border-radius:50%;box-shadow:0 0 6px #34D399"></span>
+              <span>LIVE PREVIEW</span>
+            </div>
+            <div class="live-card-art" id="prevArt"></div>
+            <div class="live-card-body">
+              <h2 class="live-card-name" id="prevName">${esc(ev.name || "Event Title Preview")}</h2>
+              <p class="live-card-club" id="prevClub">${esc(ev.club || "Hosting Club")}</p>
+              <div class="live-card-meta">
+                <div class="meta-item">📅 <span id="prevWhen">${esc(fmtWhen(when))}</span></div>
+                <div class="meta-item">📍 <span id="prevVenue">${esc(ev.venue || "Venue not set")}</span></div>
+                <div class="meta-item">🎟️ <span>32-Char Anti-Fraud QR Pass</span></div>
+              </div>
+            </div>
+          </div>
+          <p class="fine" style="margin:0;color:#64748B">Attendees will see this verified artwork and layout when opening their digital ticket links.</p>
         </div>
-      </fieldset>
-      <p class="err" id="fErr" role="alert" hidden></p>
-      <button class="btn-primary compact" type="submit" id="saveBtn"><span class="label">${id ? "Save changes" : "Create event"}</span><span class="arrow">${I.arrow}</span></button>
-    </form>
+      </div>
     </div>`;
+
   const form = view.querySelector("#evForm"), err = view.querySelector("#fErr");
+  const inName = view.querySelector("#inName"), inClub = view.querySelector("#inClub"), inVenue = view.querySelector("#inVenue");
+  const inDate = view.querySelector("#inDate"), inTime = view.querySelector("#inTime");
+  const prevName = view.querySelector("#prevName"), prevClub = view.querySelector("#prevClub"), prevVenue = view.querySelector("#prevVenue");
+  const prevWhen = view.querySelector("#prevWhen"), prevArt = view.querySelector("#prevArt"), nameLen = view.querySelector("#nameLen");
+
+  // Sync Live Preview
+  function updatePreview() {
+    const n = inName.value.trim();
+    prevName.textContent = n || "Event Title Preview";
+    nameLen.textContent = `${inName.value.length}/80`;
+    prevClub.textContent = inClub.value.trim() || "Hosting Club";
+    prevVenue.textContent = inVenue.value.trim() || "Venue not set";
+
+    const starts = new Date(`${inDate.value}T${inTime.value || "18:00"}`);
+    if (!isNaN(starts)) prevWhen.textContent = fmtWhen(starts);
+
+    const checkedArt = form.querySelector('input[name="art"]:checked')?.value || 0;
+    prevArt.style.backgroundImage = `url("${artUrl(checkedArt)}")`;
+  }
+
+  updatePreview();
+
+  inName.addEventListener("input", updatePreview);
+  inClub.addEventListener("input", updatePreview);
+  inVenue.addEventListener("input", updatePreview);
+  inDate.addEventListener("change", updatePreview);
+  inTime.addEventListener("change", updatePreview);
+  form.querySelectorAll('input[name="art"]').forEach(r => r.addEventListener("change", updatePreview));
+
+  // Preset chips handler
+  view.querySelector("#namePresets").addEventListener("click", (e) => {
+    const btn = e.target.closest(".preset-chip");
+    if (!btn) return;
+    inName.value = btn.dataset.val;
+    updatePreview();
+  });
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const f = new FormData(form);
@@ -553,7 +649,22 @@ function renderGate(state, showQr = false) {
 function msgFor(state, p) {
   const ev = state.ev;
   const first = p.name.split(" ")[0];
-  return `Hi ${first}! Your pass for ${ev.name} (${fmtWhen(ev.starts_at)}${ev.venue ? `, ${ev.venue}` : ""}):\n${passUrl(p.token)}\nShow the QR at the gate. It works once, so don't share it.`;
+  return `🎟️ Official Entry Pass for ${ev.name}
+
+Hi ${first}! Your digital entry pass is confirmed and ready.
+
+📅 Date & Time: ${fmtWhen(ev.starts_at)}
+📍 Venue: ${ev.venue || "Announced at Entrance"}
+👤 Attendee: ${p.name}
+🔒 Pass Link: ${passUrl(p.token)}
+
+⚠️ IMPORTANT GATE INSTRUCTIONS:
+1. Turn your screen brightness to maximum before scanning at the gate.
+2. This QR is cryptographically locked and works ONCE. Do not share or forward this pass.
+3. A downloaded copy or screenshot also works even without cellular network.
+
+See you at the event!
+Powered by EntryGo · https://entrygo.live`;
 }
 function sendHref(state, p) {
   const c = p.contact || "";
