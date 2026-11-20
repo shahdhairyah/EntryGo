@@ -144,9 +144,10 @@ async function boot() {
   const { data } = await sb.auth.getSession();
   session = data.session;
 
-  // Clean the hash from auth tokens so the URL stays clean on your site
+  // Clean the hash from auth tokens so the URL stays clean on your site and auto-refresh in 1 second
   if (location.hash && /access_token|refresh_token/.test(location.hash)) {
     history.replaceState(null, "", location.pathname);
+    setTimeout(() => { location.reload(); }, 1000);
   }
 
   sb.auth.onAuthStateChange((evt, s) => {
@@ -938,7 +939,7 @@ function startLive(state) {
       for (const s of scans) s.is_first ? state.first.set(s.pass_id, s) : state.bounced++;
       if (state.first.size + state.bounced !== before) { renderStat(state, true); renderList(state); }
     } catch { }
-  }, 20000);
+  }, 1000);
 }
 function stopLive() {
   if (live) { sb.removeChannel(live); live = null; }

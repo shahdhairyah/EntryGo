@@ -269,7 +269,7 @@ function showScanner() {
   idle();
   loadStats();
   clearInterval(S.statsTimer);
-  S.statsTimer = setInterval(() => { if (document.visibilityState === "visible") loadStats(); }, 5000);
+  S.statsTimer = setInterval(() => { if (document.visibilityState === "visible") loadStats(); }, 1000);
 }
 
 async function join(code, gate, { auto = false } = {}) {

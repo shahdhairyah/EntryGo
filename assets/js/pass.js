@@ -95,3 +95,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 window.addEventListener("hashchange", () => location.reload());
 
 load();
+// Auto check pass status every 1 second so check-in stamp appears live
+setInterval(() => {
+  if (document.visibilityState === "visible") load();
+}, 1000);
