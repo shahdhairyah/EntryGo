@@ -3935,3 +3935,145 @@ body:has(.home-creative-hero) .foot {
   margin-top: 0 !important;
   border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
+
+/* ── GATE SCANNER 100% STRICT ZERO-SCROLL LOCK & FULL CREATIVE HUD ── */
+body:has(#scan:not([hidden])),
+body:has(#join:not([hidden])) {
+  overflow: hidden !important;
+  height: 100vh !important;
+  width: 100vw !important;
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  background: radial-gradient(circle at 50% 15%, rgba(56, 189, 248, 0.15) 0%, transparent 60%),
+              #060913 !important;
+}
+
+body:has(#scan:not([hidden])) .app,
+body:has(#join:not([hidden])) .app {
+  padding: 10px 16px !important;
+  height: 100% !important;
+  max-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  overflow: hidden !important;
+}
+
+body:has(#scan:not([hidden])) .mast,
+body:has(#join:not([hidden])) .mast {
+  margin-bottom: 4px !important;
+  z-index: 10;
+}
+
+/* 1. Join Section Strict Fit */
+#join {
+  margin: auto 0 !important;
+  max-width: 440px !important;
+  width: 100% !important;
+  align-self: center !important;
+  background: rgba(15, 23, 42, 0.7) !important;
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  border-radius: 24px !important;
+  padding: 24px !important;
+  backdrop-filter: blur(16px) !important;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.9), 0 0 30px rgba(56, 189, 248, 0.15) !important;
+}
+
+/* 2. Scanner Viewport Strict Compact Fit */
+#scan {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  overflow: hidden !important;
+  max-width: 520px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding: 4px 0 !important;
+}
+
+#scan .scan-head {
+  padding: 8px 14px !important;
+  margin-bottom: 8px !important;
+}
+
+#scan .viewport {
+  flex: 1 !important;
+  max-height: 48dvh !important;
+  aspect-ratio: auto !important;
+  border-radius: 20px !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+  box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.9), 0 0 35px rgba(56, 189, 248, 0.25) !important;
+  border: 1.5px solid rgba(56, 189, 248, 0.45) !important;
+}
+
+/* 3. Compact Verdict & Counter */
+#scan .verdict {
+  margin-top: 8px !important;
+  padding: 10px 14px !important;
+  min-height: 46px !important;
+}
+
+#scan .v-main {
+  font-size: 17px !important;
+}
+
+#scan .v-sub {
+  font-size: 12px !important;
+}
+
+#scan .counter {
+  margin-top: 8px !important;
+  padding: 10px 14px !important;
+}
+
+#scan .counter .c-num {
+  font-size: 18px !important;
+}
+
+#scan .counter .bar {
+  height: 6px !important;
+}
+
+/* 4. Compact Recent Scans Horizontal Ticker */
+#scan .gate-recent {
+  margin-top: 8px !important;
+  max-height: 60px !important;
+  overflow-y: hidden !important;
+}
+
+#scan .recent-list {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  padding-bottom: 2px !important;
+  scrollbar-width: none;
+}
+
+#scan .recent-list::-webkit-scrollbar {
+  display: none;
+}
+
+#scan .recent-list li {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+  padding: 4px 10px !important;
+  white-space: nowrap !important;
+  font-size: 11px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+body:has(#scan:not([hidden])) .foot,
+body:has(#join:not([hidden])) .foot {
+  padding: 6px 0 !important;
+  margin-top: 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
