@@ -68,14 +68,19 @@ function openMailPreview(state, p) {
       </div>
 
       <div class="mail-footer-actions">
-        <button class="btn small" type="button" id="copyMailText">${I.copy}Copy Formatted Email</button>
-        ${p.contact && isEmail(p.contact) ? `
-          <a class="btn small primary" href="mailto:${encodeURIComponent(p.contact)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainBody)}" target="_blank" rel="noopener" style="background:#0284C7;color:#fff;border-color:#38BDF8">
-            Open in Email Client
-          </a>
-        ` : `
-          <button class="btn small" type="button" id="copyMailLink">${I.link}Copy Pass Link</button>
-        `}
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn small" type="button" id="copyMailText">${I.copy}Copy Formatted Email</button>
+          <button class="btn small" type="button" id="copyMailHtml">${I.copy}Copy HTML Design</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          ${p.contact && isEmail(p.contact) ? `
+            <a class="btn small primary" href="mailto:${encodeURIComponent(p.contact)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainBody)}" target="_blank" rel="noopener" style="background:#0284C7;color:#fff;border-color:#38BDF8">
+              Open in Email Client
+            </a>
+          ` : `
+            <button class="btn small" type="button" id="copyMailLink">${I.link}Copy Pass Link</button>
+          `}
+        </div>
       </div>
     </div>
   `;
@@ -89,6 +94,27 @@ function openMailPreview(state, p) {
 
   modal.querySelector("#copyMailText").addEventListener("click", async () => {
     (await copyText(plainBody)) ? toast("Formatted email text copied") : toast("Couldn't copy", "x");
+  });
+
+  modal.querySelector("#copyMailHtml")?.addEventListener("click", async () => {
+    const htmlEmail = `
+<div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;max-width:540px;margin:0 auto;background:#0F172A;border-radius:16px;padding:32px 24px;color:#F8FAFC;border:1px solid #1E293B">
+  <div style="background:linear-gradient(135deg,#0284C7,#4F46E5);padding:24px;border-radius:12px;text-align:center;margin-bottom:24px">
+    <h1 style="margin:0;font-size:24px;color:#FFFFFF;letter-spacing:1px">${esc(ev.name)}</h1>
+    <p style="margin:6px 0 0;color:#E0F2FE;font-size:14px">${esc(ev.club || "Official Event")}</p>
+  </div>
+  <p style="font-size:16px;color:#CBD5E1">Hi <strong>${esc(p.name)}</strong>, your digital pass is confirmed and ready!</p>
+  <div style="background:#1E293B;padding:16px;border-radius:10px;margin:20px 0">
+    <p style="margin:6px 0;font-size:14px;color:#94A3B8">📅 <strong>Date:</strong> <span style="color:#F8FAFC">${esc(fmtWhen(ev.starts_at))}</span></p>
+    <p style="margin:6px 0;font-size:14px;color:#94A3B8">📍 <strong>Venue:</strong> <span style="color:#F8FAFC">${esc(ev.venue || "Announced at Entrance")}</span></p>
+    <p style="margin:6px 0;font-size:14px;color:#94A3B8">🔒 <strong>Token:</strong> <span style="color:#34D399;font-family:monospace">Verified 1-Scan Lock</span></p>
+  </div>
+  <div style="text-align:center;margin:28px 0">
+    <a href="${esc(link)}" style="display:inline-block;background:linear-gradient(90deg,#38BDF8,#818CF8);color:#070B16;padding:14px 28px;border-radius:10px;font-weight:bold;text-decoration:none;font-size:15px;letter-spacing:0.5px">VIEW DIGITAL QR PASS →</a>
+  </div>
+  <p style="font-size:12px;color:#64748B;text-align:center;margin:20px 0 0">Show QR at the gate with maximum screen brightness. Screenshots work once.</p>
+</div>`;
+    (await copyText(htmlEmail)) ? toast("Production HTML email template copied") : toast("Couldn't copy", "x");
   });
 
   modal.querySelector("#copyMailLink")?.addEventListener("click", async () => {
@@ -783,7 +809,7 @@ function renderPassTools(state) {
   const inCount = state.first.size;
   const outCount = Math.max(0, total - inCount);
 
-  view.querySelector("#pcount").textContent = total ? plural(total, "pass", "passes") : "";
+  view.querySelector("#pcount").innerHTML = total ? `<span class="sync-pulse" title="1-sec live sync"></span> ${plural(total, "pass", "passes")}` : "";
   if (!total) {
     el.innerHTML = `<div class="empty"><h3>No passes yet</h3><p class="sub" style="color:var(--blue)">Upload the registrations sheet and each row becomes a pass with its own link.</p></div>`;
     return;
