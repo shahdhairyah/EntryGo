@@ -1,0 +1,17 @@
+{
+  "name": "EntryGo · Pass & Gate Scanner",
+  "short_name": "EntryGo",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#090D16",
+  "theme_color": "#090D16",
+  "description": "High-velocity QR entry passes and offline gate scanning system",
+  "icons": [
+    {
+      "src": "assets/img/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
