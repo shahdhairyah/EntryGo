@@ -3591,3 +3591,212 @@ body:has(.signin) .foot {
   padding: 10px 0 !important;
   margin-top: auto !important;
 }
+
+/* ── NEXT-LEVEL CREATIVE HERO UI/UX FOR HOME PAGE (ZERO SCROLL) ── */
+.home-creative-hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: center;
+  max-width: 1060px;
+  margin: auto;
+  width: 100%;
+}
+
+@media (min-width: 820px) {
+  .home-creative-hero {
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 48px;
+  }
+}
+
+/* 3D Holographic Poster Presentation */
+.hero-glass-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(22, 30, 49, 0.9) 0%, rgba(10, 15, 29, 0.95) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 35px rgba(56, 189, 248, 0.2);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+}
+
+.hero-glass-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.95), 0 0 50px rgba(56, 189, 248, 0.35);
+}
+
+.hero-poster-art {
+  height: 220px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.hero-poster-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 10%, rgba(10, 15, 29, 0.95) 100%);
+}
+
+.hero-live-pill {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(6, 9, 19, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  font-family: monospace;
+  color: #38BDF8;
+  font-weight: 700;
+  z-index: 5;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+}
+
+.hero-live-pill .dot {
+  width: 6px;
+  height: 6px;
+  background: #34D399;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #34D399;
+  animation: pulseDot 1.8s infinite;
+}
+
+.hero-card-content {
+  padding: 20px 24px 24px;
+}
+
+.hero-headline {
+  font-family: var(--f-display);
+  font-size: clamp(26px, 3.5vw, 36px);
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+
+.hero-headline span {
+  background: linear-gradient(135deg, #38BDF8 0%, #818CF8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-tagline {
+  font-size: 14px;
+  color: #38BDF8;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+/* Feature 3-Pill Highlights */
+.hero-pills-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.feature-pill {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 11px;
+  color: #CBD5E1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.feature-pill strong {
+  color: #38BDF8;
+}
+
+/* Right Interactive Auth Console */
+.hero-auth-console {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 28px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-header-title {
+  font-family: var(--f-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: #F8FAFC;
+  margin: 0;
+}
+
+.auth-header-sub {
+  font-size: 14px;
+  color: #94A3B8;
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+
+.google-auth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 56px;
+  width: 100%;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.2);
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.google-auth-btn:hover {
+  transform: translateY(-2px);
+  border-color: #38BDF8;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 30px rgba(56, 189, 248, 0.4);
+}
+
+.quick-gate-links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.quick-link-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #94A3B8;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.quick-link-box:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #38BDF8;
+  transform: translateY(-1px);
+}
