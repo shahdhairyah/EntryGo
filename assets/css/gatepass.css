@@ -3243,3 +3243,56 @@ body:has(.ticket-wrap) .mast {
   from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
 }
+
+/* ── ADVANCED ENHANCEMENTS FOR 4 CORE MODULES ── */
+
+/* 1. Live Preview Card Interactive 3D Glow */
+.event-live-card {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  position: relative;
+}
+
+.event-live-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.9), 0 0 40px rgba(56, 189, 248, 0.35);
+}
+
+.live-card-badge {
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+}
+
+/* 2. Email Modal Tab Switcher & Mobile Responsiveness */
+.mail-modal-card {
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+  box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.95), 0 0 45px rgba(56, 189, 248, 0.25) !important;
+}
+
+.mail-cta-button {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mail-cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(56, 189, 248, 0.7);
+}
+
+/* 3. Smooth fade transition for pass lists */
+.passlist li {
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.passlist li:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+}
+
+/* 4. Live Sync Toast Indicator */
+.sync-pulse {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: #34D399;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #34D399;
+  animation: pulseDot 1.5s infinite;
+}
