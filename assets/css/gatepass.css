@@ -6233,3 +6233,217 @@ body::after {
   font-size: 12px;
   color: #CBD5E1;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   CLEAN METRIC CARD & LIVE GATE CHECK-IN COMPONENT REDESIGN
+   ═══════════════════════════════════════════════════════════════ */
+
+.stat {
+  display: block !important; /* Switch from default 2-col grid to clean stacked container */
+  padding: 20px 20px 18px !important;
+}
+
+.stat-top-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.stat-top-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stat-icon-disc {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #FF2FA2 0%, #EC4899 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+  flex-shrink: 0;
+  color: #FFFFFF;
+}
+
+.stat-icon-disc svg {
+  width: 22px;
+  height: 22px;
+}
+
+.stat-main-headline {
+  font-family: var(--f-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #F8FAFC;
+  margin: 0;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.stat-main-subtext {
+  font-size: 12px;
+  color: #94A3B8;
+  margin: 2px 0 0;
+}
+
+.stat-admitted-pct-pill {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #38BDF8;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.stat-score-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 10px 0 8px;
+}
+
+.stat-big-numbers {
+  font-family: var(--f-display);
+  font-size: clamp(38px, 9vw, 48px);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #FFFFFF;
+  line-height: 1;
+}
+
+.stat-big-numbers span.total-denom {
+  font-size: 0.7em;
+  color: #94A3B8;
+  font-weight: 700;
+}
+
+.stat-progressbar-container {
+  width: 100%;
+  height: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.stat-progressbar-fill {
+  height: 100%;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #38BDF8 0%, #10B981 100%);
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 4 Metrics Row */
+.stat-kpi-quad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.kpi-tile {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 4px;
+  text-align: center;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.kpi-tile:hover {
+  transform: translateY(-2px);
+}
+
+.kpi-tile-val {
+  font-family: var(--f-display);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #F8FAFC;
+}
+
+.kpi-tile-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94A3B8;
+  margin-top: 4px;
+}
+
+.kpi-tile-total { border-color: rgba(255, 255, 255, 0.12); }
+.kpi-tile-in { border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.08); }
+.kpi-tile-in .kpi-tile-val { color: #34D399; }
+.kpi-tile-out { border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.08); }
+.kpi-tile-out .kpi-tile-val { color: #FBBF24; }
+.kpi-tile-bounced { border-color: rgba(244, 63, 94, 0.3); background: rgba(244, 63, 94, 0.08); }
+.kpi-tile-bounced .kpi-tile-val { color: #FB7185; }
+
+/* Tier Badges Row */
+.stat-tier-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tier-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.tier-badge-pill.vip {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #FBBF24;
+}
+
+.tier-badge-pill.backstage {
+  background: rgba(168, 85, 247, 0.12);
+  border-color: rgba(168, 85, 247, 0.35);
+  color: #C084FC;
+}
+
+.tier-badge-pill.volunteer {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34D399;
+}
+
+.tier-badge-pill.standard {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #38BDF8;
+}
+
+.stat-bounced-alert {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #FB7185;
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  border-radius: 8px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

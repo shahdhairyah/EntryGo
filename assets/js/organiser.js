@@ -1207,48 +1207,78 @@ function renderStat(state, bump = false) {
   }
 
   el.innerHTML = `
-    <span class="dot">${I.dotCheck}</span>
-    <p class="stat-label" style="display:flex;justify-content:space-between;align-items:center">
-      <span>Live Gate Check-in</span>
-      <span style="font-size:12px;color:#38BDF8;font-weight:700">${pct}% Admitted</span>
-    </p>
-    <div class="stat-line">
-      <p class="stat-num ink" id="snum">${checked} / ${total}</p>
-      <div class="bar" aria-hidden="true"><i style="--p:${total ? Math.min(1, checked / total) : 0}"></i></div>
+    <!-- Top Header: Icon + Title + Admitted Pill -->
+    <div class="stat-top-header">
+      <div class="stat-top-title-wrap">
+        <div class="stat-icon-disc">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <div>
+          <h3 class="stat-main-headline">Live Gate Check-in</h3>
+          <p class="stat-main-subtext">Realtime admission telemetry</p>
+        </div>
+      </div>
+      <div class="stat-admitted-pct-pill">${pct}% Admitted</div>
     </div>
-    
-    <!-- 4-Stat Live Metric Row -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0 8px;text-align:center">
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:6px 2px">
-        <div style="font-size:15px;font-weight:800;color:#F8FAFC">${total}</div>
-        <div style="font-size:10px;color:#94A3B8;text-transform:uppercase;font-weight:600">Total</div>
+
+    <!-- Big Numbers Display (5 / 101) -->
+    <div class="stat-score-row">
+      <div class="stat-big-numbers" id="snum">
+        ${checked} <span class="total-denom">/ ${total}</span>
       </div>
-      <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:8px;padding:6px 2px">
-        <div style="font-size:15px;font-weight:800;color:#34D399">${checked}</div>
-        <div style="font-size:10px;color:#34D399;text-transform:uppercase;font-weight:600">Checked In</div>
+      <span style="font-size:12px;color:#94A3B8;font-weight:600">Attendees inside</span>
+    </div>
+
+    <!-- Horizontal Progress Bar -->
+    <div class="stat-progressbar-container">
+      <div class="stat-progressbar-fill" style="width:${pct}%"></div>
+    </div>
+
+    <!-- 4 Clean Metric Tiles Row (Total, Checked In, Not In, Bounced) -->
+    <div class="stat-kpi-quad">
+      <div class="kpi-tile kpi-tile-total">
+        <div class="kpi-tile-val">${total}</div>
+        <div class="kpi-tile-label">Total</div>
       </div>
-      <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:6px 2px">
-        <div style="font-size:15px;font-weight:800;color:#FBBF24">${notIn}</div>
-        <div style="font-size:10px;color:#FBBF24;text-transform:uppercase;font-weight:600">Not In</div>
+      <div class="kpi-tile kpi-tile-in">
+        <div class="kpi-tile-val">${checked}</div>
+        <div class="kpi-tile-label">Checked In</div>
       </div>
-      <div style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.25);border-radius:8px;padding:6px 2px">
-        <div style="font-size:15px;font-weight:800;color:#FB7185">${state.bounced}</div>
-        <div style="font-size:10px;color:#FB7185;text-transform:uppercase;font-weight:600">Bounced</div>
+      <div class="kpi-tile kpi-tile-out">
+        <div class="kpi-tile-val">${notIn}</div>
+        <div class="kpi-tile-label">Not In</div>
+      </div>
+      <div class="kpi-tile kpi-tile-bounced">
+        <div class="kpi-tile-val">${state.bounced}</div>
+        <div class="kpi-tile-label">Bounced</div>
       </div>
     </div>
 
-    <!-- Tier Breakdown Row -->
-    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px">
-      <span style="color:#64748B;font-weight:700">Tiers:</span>
-      <span class="mini-tier tier-vip" style="margin:0">⭐ VIP: ${vipCount}</span>
-      <span class="mini-tier tier-backstage" style="margin:0">⚡ Backstage: ${backstageCount}</span>
-      <span class="mini-tier tier-volunteer" style="margin:0">🤝 Volunteer: ${volunteerCount}</span>
-      <span class="mini-tier tier-standard" style="margin:0">🎟️ Standard: ${standardCount}</span>
+    <!-- Tier Badges Row -->
+    <div class="stat-tier-badges-row">
+      <span style="font-size:11px;color:#64748B;font-weight:700;margin-right:2px">TIERS:</span>
+      <span class="tier-badge-pill vip">⭐ VIP: ${vipCount}</span>
+      <span class="tier-badge-pill backstage">⚡ BACKSTAGE: ${backstageCount}</span>
+      <span class="tier-badge-pill volunteer">🤝 VOLUNTEER: ${volunteerCount}</span>
+      <span class="tier-badge-pill standard">🎟️ STANDARD: ${standardCount}</span>
     </div>
 
-    ${state.bounced ? `<p class="stat-note" style="margin-top:8px">${plural(state.bounced, "repeat scan")} bounced at the gate</p>` : ""}`;
+    <!-- Intercepted Repeat Scans Alert -->
+    ${state.bounced ? `
+      <div class="stat-bounced-alert">
+        <span>⚠️</span>
+        <span><b>${state.bounced}</b> repeat scan${state.bounced === 1 ? "" : "s"} intercepted & bounced at the gate</span>
+      </div>
+    ` : ""}
+  `;
+
   el.setAttribute("aria-label", `Checked in ${checked} of ${total}`);
-  if (bump) { const n = el.querySelector("#snum"); n.animate([{ transform: "scale(1.08)", color: "#FF2FA2" }, { transform: "scale(1)" }], { duration: 520, easing: "cubic-bezier(.16,1,.3,1)" }); }
+  if (bump) {
+    const n = el.querySelector("#snum");
+    n?.animate([{ transform: "scale(1.06)", color: "#38BDF8" }, { transform: "scale(1)" }], { duration: 450, easing: "cubic-bezier(.16,1,.3,1)" });
+  }
 }
 
 // ── gate code & links ──
