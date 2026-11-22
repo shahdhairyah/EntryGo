@@ -169,9 +169,9 @@ function render(p, isOffline = false) {
 
       <!-- User Action Buttons -->
       <div class="pass-actions" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px auto 20px">
-        <button class="btn small btn-glow-creative" type="button" id="saveImgBtn">${I.download}Save as image</button>
-        <button class="btn small" type="button" id="copy" style="background:#1E293B;color:#F8FAFC;border:1px solid rgba(255,255,255,0.15)">${I.link}Copy pass link</button>
-        <button class="btn small" type="button" id="pwaInstallBtn" style="background:#0284C7;color:#fff" hidden>📱 Add to home screen</button>
+        <button class="btn small btn-glow-creative" type="button" id="copy" style="padding:10px 24px;font-size:14px;font-weight:700">
+          ${I.link}Copy pass link
+        </button>
       </div>
     </div>`;
 
@@ -195,43 +195,9 @@ function render(p, isOffline = false) {
     (await copyText(passUrl(token))) ? toast("Pass link copied") : toast("Couldn't copy link", "x");
   });
 
-  // Save as image (HTML5 Canvas Snapshot)
-  view.querySelector("#saveImgBtn").addEventListener("click", () => {
-    try {
-      const svgEl = view.querySelector(".t-qr svg");
-      if (!svgEl) return window.print();
-      const svgData = new XMLSerializer().serializeToString(svgEl);
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      const img = new Image();
-      canvas.width = 600;
-      canvas.height = 600;
-      img.onload = () => {
-        ctx.fillStyle = "#FFFFFF";
-        ctx.fillRect(0, 0, 600, 600);
-        ctx.drawImage(img, 30, 30, 540, 540);
-        const a = document.createElement("a");
-        a.download = `${p.name.replace(/\s+/g, "_")}_EntryGo_Pass.png`;
-        a.href = canvas.toDataURL("image/png");
-        a.click();
-        toast("Ticket image downloaded");
-      };
-      img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
-    } catch {
-      window.print();
-    }
-  });
 
-  // PWA Install prompt handling
-  const pwaBtn = view.querySelector("#pwaInstallBtn");
-  if (window.deferredPwaPrompt) {
-    pwaBtn.hidden = false;
-    pwaBtn.addEventListener("click", async () => {
-      window.deferredPwaPrompt.prompt();
-      const choice = await window.deferredPwaPrompt.userChoice;
-      if (choice.outcome === "accepted") pwaBtn.hidden = true;
-    });
-  }
+
+
 }
 
 window.addEventListener("beforeinstallprompt", (e) => {
