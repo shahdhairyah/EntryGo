@@ -74,6 +74,14 @@ function render(p, isOffline = false) {
         </div>` : ""}
 
       <article class="ticket ${used ? "used" : ""} ticket-${tier.id}" aria-label="Entry pass for ${esc(p.name)}">
+        <div class="ticket-hologram-scanline"></div>
+        <div class="ticket-auth-ribbon">
+          <div class="ticket-auth-badge">
+            <span class="ticket-auth-pulse"></span>
+            <span>ENTRYGO SECURE PASS · 192-BIT</span>
+          </div>
+          <span>TAP & HOLD TO SAVE</span>
+        </div>
         <!-- Live Pass Status Indicator -->
         <div class="ticket-badge">
           <span class="dot"></span>
@@ -116,9 +124,13 @@ function render(p, isOffline = false) {
           <span class="t-cutout-right"></span>
         </div>
 
-        <!-- QR Code Body -->
+        <!-- QR Code Body with Registration Corner Crosshairs -->
         <div class="t-qr" id="qrContainer">
           <div class="qr-canvas-holder ${used ? "qr-used-dim" : ""}">
+            <span class="qr-registration-corner qr-corner-tl"></span>
+            <span class="qr-registration-corner qr-corner-tr"></span>
+            <span class="qr-registration-corner qr-corner-bl"></span>
+            <span class="qr-registration-corner qr-corner-br"></span>
             ${qrSvg(passUrl(token), { label: `Entry QR for ${p.name}`, ghost: "#FF2FA2" })}
             <div class="qr-token-id">PASS TOKEN: ${esc(shortToken)}</div>
           </div>
@@ -157,8 +169,8 @@ function render(p, isOffline = false) {
 
       <!-- User Action Buttons -->
       <div class="pass-actions" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px auto 20px">
-        <button class="btn small" type="button" id="saveImgBtn" style="background:#1E293B;color:#F8FAFC">${I.download}Save as image</button>
-        <button class="btn small" type="button" id="copy" style="background:#1E293B;color:#F8FAFC">${I.link}Copy pass link</button>
+        <button class="btn small btn-glow-creative" type="button" id="saveImgBtn">${I.download}Save as image</button>
+        <button class="btn small" type="button" id="copy" style="background:#1E293B;color:#F8FAFC;border:1px solid rgba(255,255,255,0.15)">${I.link}Copy pass link</button>
         <button class="btn small" type="button" id="pwaInstallBtn" style="background:#0284C7;color:#fff" hidden>📱 Add to home screen</button>
       </div>
     </div>`;

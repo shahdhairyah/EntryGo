@@ -710,13 +710,19 @@ async function eventView(id) {
 
     <div class="dash">
       <div class="left stack">
-        <div class="poster" id="poster" style="position:relative">
-          <div style="position:absolute;top:12px;right:12px;display:flex;gap:6px;z-index:2">
-            <span style="font-size:11px;background:rgba(15,23,42,0.85);backdrop-filter:blur(6px);border:1px solid rgba(56,189,248,0.3);color:#38BDF8;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:0.04em">LIVE DASHBOARD</span>
+        <div class="poster" id="poster" style="position:relative;overflow:hidden">
+          <div class="poster-hero-overlay"></div>
+          <div style="position:absolute;top:14px;right:14px;display:flex;gap:6px;z-index:3">
+            <span style="font-size:11px;background:rgba(15,23,42,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.35);color:#38BDF8;font-weight:800;padding:4px 12px;border-radius:20px;letter-spacing:0.05em;box-shadow:0 0 15px rgba(56,189,248,0.25)">⚡ LIVE EVENT</span>
           </div>
-          <h1 class="poster-title ink">${escT(ev.name)}</h1>
-          ${ev.club ? `<p class="poster-club">${esc(ev.club)}</p>` : ""}
-          <span class="poster-when">${esc(fmtWhen(ev.starts_at))}${ev.venue ? ` · ${esc(ev.venue)}` : ""}</span>
+          <div style="position:relative;z-index:2;margin-top:auto">
+            <h1 class="poster-title ink" style="font-size:clamp(26px,7vw,36px);margin-bottom:4px;color:#F8FAFC">${escT(ev.name)}</h1>
+            ${ev.club ? `<p class="poster-club" style="color:#38BDF8;font-weight:600;margin:0 0 6px">${esc(ev.club)}</p>` : ""}
+            <div class="poster-quick-stats-strip">
+              <span class="poster-stat-pill">📅 ${esc(fmtWhen(ev.starts_at))}</span>
+              ${ev.venue ? `<span class="poster-stat-pill">📍 ${esc(ev.venue)}</span>` : ""}
+            </div>
+          </div>
         </div>
         <div id="regSlot" class="stack"></div>
         <div class="stat grain" id="stat"></div>
