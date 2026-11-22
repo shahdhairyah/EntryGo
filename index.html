@@ -40,15 +40,34 @@ FORM: Pinned by the user: concept A "gig poster" (ui-concepts/gatepass/gatepass_
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 -->
   <main class="app">
-    <header class="mast">
-      <div class="brand-group">
-        <a class="brand-link" href="./" id="home">
-          <img class="brand-logo-img" src="assets/img/logo.png" alt="EntryGo Logo">
-          <span class="logo ink">EntryGo</span>
+        <header class="main-navbar">
+      <div class="nav-brand-container">
+        <a class="nav-brand-link" href="./" id="home">
+          <div class="nav-logo-box">
+            <img class="nav-logo-img" src="assets/img/logo.png" alt="EntryGo Logo">
+          </div>
+          <div class="nav-title-group">
+            <span class="nav-title-text">EntryGo</span>
+            <span class="nav-version-tag">PRO v2.4</span>
+          </div>
         </a>
-        <a class="brand-by" href="https://www.shahdhairyah.in/" target="_blank" rel="noopener">By Shah Dhairya</a>
+        <a class="nav-creator-pill" href="https://www.shahdhairyah.in/" target="_blank" rel="noopener">
+          <span class="creator-spark">✦</span>
+          <span>By Shah Dhairya</span>
+        </a>
       </div>
-      <span class="mast-role" id="role">Organiser</span>
+
+      <!-- Center Live Links for Fast Switching -->
+      <nav class="nav-links-hub">
+        <a class="nav-hub-link active" href="./">Organiser</a>
+        <a class="nav-hub-link" href="./gate/">Gate Scanner</a>
+        <a class="nav-hub-link" href="./p/">Pass View</a>
+      </nav>
+
+      <!-- Right Actions / User Profile -->
+      <div class="nav-actions-slot" id="role">
+        <span class="nav-role-badge">Organiser Portal</span>
+      </div>
     </header>
     <div id="view" aria-live="polite">
       <div class="skeleton" style="height:420px"></div>
