@@ -60,86 +60,107 @@ async function load() {
 
 function render(p, isOffline = false) {
   const ev = p.event;
-  document.title = `${p.name} · ${typo(ev.name)} · EntryGo`;
+  document.title = `${p.name} · ${typo(ev.name)} · EntryGo Pass`;
   const used = !!p.checked_in_at;
   const tier = getTier(p);
   const shortToken = token.length > 12 ? `${token.slice(0, 6)}•••${token.slice(-4)}` : token;
 
   view.innerHTML = `
-    ${isOffline ? `
-      <div class="offline-pass-banner" role="status" style="max-width:380px;margin:0 auto 12px;background:rgba(245,158,11,0.15);border:1px solid #F59E0B;color:#FDE68A;padding:8px 14px;border-radius:10px;font-size:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px">
-        <span>⚠️</span>
-        <span><b>Offline View:</b> Entry verification is validated live at the gate scanner.</span>
-      </div>` : ""}
+    <div class="pass-page-wrap">
+      ${isOffline ? `
+        <div class="offline-pass-banner" role="status" style="margin-bottom:14px;background:rgba(245,158,11,0.15);border:1px solid #F59E0B;color:#FDE68A;padding:8px 14px;border-radius:12px;font-size:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px">
+          <span>⚠️</span>
+          <span><b>Offline Mode:</b> This pass was loaded from cache. Gate staff verify entry online.</span>
+        </div>` : ""}
 
-    <div class="ticket-wrap">
       <article class="ticket ${used ? "used" : ""} ticket-${tier.id}" aria-label="Entry pass for ${esc(p.name)}">
-        <!-- Top Status Bar -->
-        <div class="ticket-badge ${tier.cssClass}">
+        <!-- Live Pass Status Indicator -->
+        <div class="ticket-badge">
           <span class="dot"></span>
-          <span class="badge-tier-tag">${tier.icon} ${tier.shortLabel}</span>
-          <span class="badge-status-sep">·</span>
-          <span>${used ? "USED" : "ACTIVE PASS"}</span>
+          <span style="color:#CBD5E1">${tier.icon} ${tier.shortLabel}</span>
+          <span style="opacity:0.5">·</span>
+          <span style="color:${used ? "#FDA4AF" : "#34D399"}">${used ? "USED PASS" : "VALID PASS"}</span>
         </div>
 
-        <!-- Poster Banner -->
+        <!-- Poster Header Art -->
         <div class="t-art" role="img" aria-label="Event Poster"></div>
 
-        <!-- Body Details -->
+        <!-- Details Section -->
         <div class="t-body">
-          <!-- Large Tier Pill with Icon + Text -->
-          <div class="t-tier-pill ${tier.cssClass}" style="margin:6px auto 10px">
+          <!-- Large Tier Pill -->
+          <div class="t-tier-pill ${tier.cssClass}" style="margin:0 auto 12px">
             <span class="tier-pill-icon">${tier.icon}</span>
             <span class="tier-pill-label">${tier.label}</span>
           </div>
 
-          <h1 class="t-name ink" style="font-size:28px">${esc(p.name)}</h1>
-          <div class="t-rule inked"></div>
-          <p class="t-event ink">${escT(ev.name)}</p>
-          <p class="t-when">📅 ${esc(fmtWhen(ev.starts_at))}</p>
-          ${ev.venue ? `<p class="t-where">📍 ${esc(ev.venue)}</p>` : ""}
+          <p class="t-event">${escT(ev.name)}</p>
+          <h1 class="t-name">${esc(p.name)}</h1>
+
+          <div class="t-meta-chips">
+            <div class="t-chip">
+              <span>📅</span>
+              <span>${esc(fmtWhen(ev.starts_at))}</span>
+            </div>
+            ${ev.venue ? `
+              <div class="t-chip">
+                <span>📍</span>
+                <span>${esc(ev.venue)}</span>
+              </div>
+            ` : ""}
+          </div>
         </div>
 
-        <!-- Big QR Section on White Rounded Square -->
+        <!-- Perforated Tear Line with Side Notches -->
+        <div class="t-divider-perforation">
+          <span class="t-cutout-left"></span>
+          <span class="t-cutout-right"></span>
+        </div>
+
+        <!-- QR Code Body -->
         <div class="t-qr" id="qrContainer">
           <div class="qr-canvas-holder ${used ? "qr-used-dim" : ""}">
             ${qrSvg(passUrl(token), { label: `Entry QR for ${p.name}`, ghost: "#FF2FA2" })}
             <div class="qr-token-id">PASS TOKEN: ${esc(shortToken)}</div>
           </div>
+
           ${used ? `
-            <div class="t-stamp" role="alert">
-              <div class="inked">
-                <span class="stamp-word">USED</span>
-                <small>Checked in at ${esc(fmtTime(p.checked_in_at))}${p.gate ? ` · ${esc(p.gate)}` : ""}</small>
+            <div class="t-stamp-overlay" role="alert">
+              <div class="stamp-badge">
+                <div class="stamp-badge-word">USED</div>
+                <div class="stamp-badge-sub">ADMITTED AT ${esc(fmtTime(p.checked_in_at))}${p.gate ? ` · ${esc(p.gate)}` : ""}</div>
               </div>
             </div>` : ""}
         </div>
 
-        <div class="t-tear" aria-hidden="true"></div>
-        <div class="t-stub ink">${used ? `Checked in at ${esc(fmtTime(p.checked_in_at))}` : `Show this at the gate · This pass works once`}</div>
+        <!-- Ticket Stub Base -->
+        <div class="t-stub-bar">
+          ${used 
+            ? `Checked in at ${esc(fmtTime(p.checked_in_at))} · Single entry consumed` 
+            : `Show this QR at the gate · Pass works once`}
+        </div>
       </article>
-    </div>
 
-    <!-- Pass Notes & Instructions -->
-    <div class="pass-notes" style="max-width:390px;margin:12px auto;text-align:center">
-      <p class="fine" style="color:#94A3B8;font-size:13px;line-height:1.45;margin:0 0 10px">
-        ${used
-          ? `✓ This pass was scanned and admitted at ${esc(fmtTime(p.checked_in_at))}. Sharing it will not get a second person in.`
-          : `Show this at the gate. A screenshot works once; sharing it will not get a second person in.`
-        }
-      </p>
+      <!-- Safety & Instructions Note -->
+      <div class="pass-notes" style="margin:16px auto 10px;text-align:center">
+        <p class="fine" style="color:#94A3B8;font-size:13px;line-height:1.45;margin:0 0 10px">
+          ${used
+            ? `✓ This pass was scanned and verified at the entrance gate. Sharing it will not get a second person in.`
+            : `A screenshot works once; sharing it will not get a second person in.`
+          }
+        </p>
 
-      <div class="brightness-hint" style="display:inline-flex;align-items:center;gap:6px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.25);padding:5px 12px;border-radius:20px;font-size:12px;color:#38BDF8">
-        <span>💡</span>
-        <span>Turn brightness up for faster scanning</span>
+        <div class="brightness-hint" style="display:inline-flex;align-items:center;gap:6px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.25);padding:6px 14px;border-radius:20px;font-size:12px;color:#38BDF8">
+          <span>💡</span>
+          <span>Turn screen brightness up for fastest gate scan</span>
+        </div>
       </div>
-    </div>
 
-    <!-- Pass Actions -->
-    <div class="pass-actions" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px auto 20px;max-width:400px">
-      <button class="btn small" type="button" id="saveImgBtn" style="background:#1E293B;color:#F8FAFC">${I.download}Save as image</button>
-      <button class="btn small" type="button" id="copy" style="background:#1E293B;color:#F8FAFC">${I.link}Copy pass link</button>
-      <button class="btn small" type="button" id="pwaInstallBtn" style="background:#0284C7;color:#fff" hidden>📱 Add to home screen</button>
+      <!-- User Action Buttons -->
+      <div class="pass-actions" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px auto 20px">
+        <button class="btn small" type="button" id="saveImgBtn" style="background:#1E293B;color:#F8FAFC">${I.download}Save as image</button>
+        <button class="btn small" type="button" id="copy" style="background:#1E293B;color:#F8FAFC">${I.link}Copy pass link</button>
+        <button class="btn small" type="button" id="pwaInstallBtn" style="background:#0284C7;color:#fff" hidden>📱 Add to home screen</button>
+      </div>
     </div>`;
 
   const t = view.querySelector(".ticket");
@@ -167,7 +188,6 @@ function render(p, isOffline = false) {
     try {
       const svgEl = view.querySelector(".t-qr svg");
       if (!svgEl) return window.print();
-      // Draw SVG to canvas for download
       const svgData = new XMLSerializer().serializeToString(svgEl);
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
@@ -198,22 +218,10 @@ function render(p, isOffline = false) {
       window.deferredPwaPrompt.prompt();
       const choice = await window.deferredPwaPrompt.userChoice;
       if (choice.outcome === "accepted") pwaBtn.hidden = true;
-      window.deferredPwaPrompt = null;
     });
   }
-
-  keepAwake();
 }
 
-// Keep the screen on while the pass is open (no-op where unsupported).
-let lock;
-async function keepAwake() {
-  try { lock = await navigator.wakeLock?.request("screen"); } catch {}
-}
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && lock?.released) keepAwake(); });
-window.addEventListener("hashchange", () => location.reload());
-
-// Capture beforeinstallprompt for Add to home screen
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   window.deferredPwaPrompt = e;

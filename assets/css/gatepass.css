@@ -5773,3 +5773,288 @@ body {
   border-color: rgba(56, 189, 248, 0.3) !important;
   transform: translateX(-2px);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ULTRA-PREMIUM ATTENDEE TICKET & GIG-POSTER REDESIGN (p/index.html)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Center pass container and page wrapper */
+.pass-page-wrap {
+  max-width: 440px;
+  margin: 0 auto;
+  position: relative;
+  width: 100%;
+}
+
+/* Master Ticket Container */
+.ticket {
+  background: linear-gradient(180deg, #111827 0%, #0B1120 40%, #070B14 100%) !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 35px rgba(56, 189, 248, 0.15) !important;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Tier-specific glowing border & ambient glow */
+.ticket.ticket-vip {
+  border: 1.5px solid #F59E0B !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 35px rgba(245, 158, 11, 0.3) !important;
+}
+
+.ticket.ticket-backstage {
+  border: 1.5px solid #A855F7 !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 35px rgba(168, 85, 247, 0.3) !important;
+}
+
+.ticket.ticket-volunteer {
+  border: 1.5px solid #10B981 !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 35px rgba(16, 185, 129, 0.3) !important;
+}
+
+.ticket.ticket-standard {
+  border: 1.5px solid #38BDF8 !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 30px rgba(56, 189, 248, 0.2) !important;
+}
+
+/* Event Poster Header in Ticket */
+.t-art {
+  height: 140px !important;
+  background-position: center !important;
+  background-size: cover !important;
+  position: relative !important;
+  mask: none !important;
+  -webkit-mask: none !important;
+}
+
+.t-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(7, 11, 20, 0.2) 0%, rgba(11, 17, 32, 0.95) 100%);
+}
+
+/* Top Status Chip inside ticket */
+.ticket-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #F8FAFC;
+}
+
+.ticket-badge .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
+  animation: pulseDot 1.8s infinite;
+}
+
+.ticket.used .ticket-badge .dot {
+  background: #F43F5E;
+  box-shadow: 0 0 8px #F43F5E;
+  animation: none;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* Ticket Details Section */
+.t-body {
+  padding: 16px 20px 10px !important;
+  text-align: center;
+}
+
+.t-name {
+  font-family: var(--f-display) !important;
+  font-size: clamp(30px, 9vw, 38px) !important;
+  font-weight: 800 !important;
+  color: #FFFFFF !important;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  margin: 10px 0 6px !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8) !important;
+}
+
+.t-event {
+  font-family: var(--f-display) !important;
+  font-size: clamp(18px, 5.5vw, 22px) !important;
+  font-weight: 700 !important;
+  color: #38BDF8 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0 0 10px !important;
+}
+
+/* Event Metadata Pills */
+.t-meta-chips {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.t-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #CBD5E1;
+}
+
+/* Perforated Divider Strip */
+.t-divider-perforation {
+  position: relative;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px 0 10px;
+}
+
+.t-divider-perforation::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 2px, transparent 2.5px) repeat-x;
+  background-size: 10px 2px;
+}
+
+.t-cutout-left, .t-cutout-right {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  background: #090D16;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.t-cutout-left {
+  left: -12px;
+  border-right: 1.5px solid rgba(255, 255, 255, 0.12);
+}
+
+.t-cutout-right {
+  right: -12px;
+  border-left: 1.5px solid rgba(255, 255, 255, 0.12);
+}
+
+/* QR Code Display Container */
+.t-qr {
+  position: relative;
+  padding: 10px 20px 20px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qr-canvas-holder {
+  background: #FFFFFF !important;
+  border-radius: 20px !important;
+  padding: 14px !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 0 0 0 3px rgba(255, 255, 255, 0.1) !important;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.qr-canvas-holder svg {
+  width: min(60vw, 220px) !important;
+  height: min(60vw, 220px) !important;
+}
+
+.qr-token-id {
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0F172A;
+  background: #F1F5F9;
+  padding: 3px 10px;
+  border-radius: 6px;
+  margin-top: 10px;
+  letter-spacing: 0.08em;
+}
+
+/* High-Impact USED Stamp */
+.t-stamp-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.stamp-badge {
+  border: 4px solid #F43F5E;
+  color: #F43F5E;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(6px);
+  padding: 8px 24px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(244, 63, 94, 0.4);
+  text-align: center;
+  animation: stampSlam 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.stamp-badge-word {
+  font-family: var(--f-display);
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  line-height: 1;
+}
+
+.stamp-badge-sub {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+  color: #FDA4AF;
+}
+
+@keyframes stampSlam {
+  0% { transform: scale(1.6) rotate(-25deg); opacity: 0; }
+  100% { transform: scale(1) rotate(-12deg); opacity: 1; }
+}
+
+/* Ticket Stub Bottom */
+.t-stub-bar {
+  background: rgba(0, 0, 0, 0.4);
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  padding: 12px 16px;
+  text-align: center;
+  font-family: var(--f-display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: #94A3B8;
+  text-transform: uppercase;
+}
