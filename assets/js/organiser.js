@@ -211,31 +211,49 @@ function route() {
 
 function fail(e) {
   const msg = e?.message || String(e);
-  const paused = /fetch|network|Failed to fetch|5\d\d/.test(msg) ? PAUSED_MSG + " Or check your connection." : msg;
-  view.innerHTML = `<section class="empty"><h3>Something broke</h3><p class="sub">${esc(paused)}</p><p style="margin-top:14px"><button class="btn small" type="button" onclick="location.reload()">${I.refresh}Try again</button></p></section>`;
+  const isOffline = !navigator.onLine || /network|failed to fetch|load failed/i.test(msg);
+  const isPaused = /5\d\d|540|paused/i.test(msg);
+  
+  const title = isOffline ? "No connection" : isPaused ? "Project paused in Supabase" : "Something went wrong";
+  const desc = isOffline 
+    ? "Check your internet connection and try again." 
+    : isPaused 
+    ? "The database is asleep (free Supabase projects pause after a week idle). Restore it from your Supabase dashboard." 
+    : esc(msg);
+
+  view.innerHTML = `
+    <section class="empty" role="alert" style="max-width:480px;margin:32px auto;text-align:center;padding:28px 20px;background:rgba(15,23,42,0.8);border:1px solid rgba(244,63,94,0.3);border-radius:18px">
+      <div style="font-size:36px;margin-bottom:12px">${isOffline ? "📡" : isPaused ? "💤" : "⚠️"}</div>
+      <h3 style="color:#FDA4AF;font-size:22px;margin:0 0 8px">${title}</h3>
+      <p class="sub" style="color:#94A3B8;font-size:14px;line-height:1.5;margin:0 0 18px">${desc}</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn small" type="button" onclick="location.reload()" style="background:#0284C7;color:#fff">${I.refresh}Try again</button>
+        ${isPaused ? `<a class="btn small" href="https://supabase.com/dashboard" target="_blank" rel="noopener" style="background:#1E293B;color:#F8FAFC">Supabase Dashboard ${I.open}</a>` : ""}
+      </div>
+    </section>`;
 }
 
 // ─────────────────────────────────────────────── sign in
 
 function signInView(errMsg = "") {
   roleEl.textContent = "Organiser Portal";
-  document.title = "EntryGo · Next-Gen QR Entry System";
+  document.title = "EntryGo · Free QR passes for your club event";
   view.innerHTML = `
     <section class="home-creative-hero">
       <!-- Left 3D Glass Hero Card -->
       <div class="hero-glass-card" id="heroCard">
         <div class="hero-live-pill">
           <span class="dot"></span>
-          <span>HIGH-VELOCITY EVENT ENGINE</span>
+          <span>COLLEGE EVENT ENTRY SYSTEM</span>
         </div>
         <div class="hero-poster-art" id="art"></div>
         <div class="hero-card-content">
-          <h1 class="hero-headline">Instant Passes. <span>Zero Friction.</span></h1>
-          <p class="hero-tagline">Upload registrations sheet ➔ Everyone gets a cryptographic QR pass.</p>
+          <h1 class="hero-headline">EntryGo. <span>Free QR passes for your club event.</span></h1>
+          <p class="hero-tagline">Upload registrations sheet ➔ Everyone gets a cryptographic QR pass. Any phone scans at the gate.</p>
           <div class="hero-pills-row">
-            <span class="feature-pill">⚡ <strong>&lt; 30s</strong> Generation</span>
-            <span class="feature-pill">🔒 <strong>100%</strong> Anti-Fraud</span>
-            <span class="feature-pill">📱 <strong>0</strong> App Downloads</span>
+            <span class="feature-pill">⚡ <strong>Instant</strong> Link Dispatch</span>
+            <span class="feature-pill">🔒 <strong>1-Scan</strong> Anti-Fraud</span>
+            <span class="feature-pill">📱 <strong>Zero</strong> App Downloads</span>
           </div>
         </div>
       </div>
@@ -244,7 +262,7 @@ function signInView(errMsg = "") {
       <div class="hero-auth-console">
         <div>
           <h2 class="auth-header-title">Organizer Sign In</h2>
-          <p class="auth-header-sub">Manage your events, dispatch verified tickets, and monitor live gates.</p>
+          <p class="auth-header-sub" style="font-size:14px;color:#94A3B8;margin-top:4px">Free QR passes for your club event.</p>
         </div>
 
         <p class="err" id="sErr" role="alert" ${errMsg ? "" : "hidden"}>${esc(errMsg)}</p>
@@ -254,9 +272,22 @@ function signInView(errMsg = "") {
           <span>Continue with Google</span>
         </button>
 
-        <p class="fine" style="margin:0;color:#64748B;font-size:12px">Organizers sign in with Google OAuth. Gate volunteers and attendees never need an account.</p>
+        <div style="display:flex;align-items:center;gap:12px;margin:4px 0">
+          <div style="flex:1;height:1px;background:rgba(255,255,255,0.1)"></div>
+          <span style="font-size:12px;color:#64748B;text-transform:uppercase">or email magic link</span>
+          <div style="flex:1;height:1px;background:rgba(255,255,255,0.1)"></div>
+        </div>
 
-        <div class="quick-gate-links" style="grid-template-columns: 1fr;">
+        <form id="signin" class="stack" style="gap:10px" novalidate>
+          <input class="input" type="email" id="email" placeholder="your.email@college.edu" autocomplete="email" required>
+          <button class="btn small" type="submit" id="sendBtn" style="background:#1E293B;color:#F8FAFC;border:1px solid rgba(56,189,248,0.3)">
+            <span class="label">Send sign-in link</span>
+          </button>
+        </form>
+
+        <p class="fine" style="margin:0;color:#64748B;font-size:12px">Free and open source. Organizers sign in to issue passes; gate volunteers never need an account.</p>
+
+        <div class="quick-gate-links" style="grid-template-columns: 1fr;margin-top:6px">
           <a class="quick-link-box" href="gate/" style="justify-content: center; padding: 12px;">
             <span>${I.qr}</span>
             <span>Gate Scanner (Volunteer Portal)</span>
@@ -292,11 +323,18 @@ function signInView(errMsg = "") {
     if (!isEmail(email)) { err.textContent = "That email doesn't look right."; err.hidden = false; return; }
     store.set("gp.email", email);
     btn.disabled = true; btn.querySelector(".label").textContent = "Sending…";
+    if (localBackend.isDemoSession() || !sb) {
+      setTimeout(() => {
+        btn.disabled = false;
+        checkInbox(email);
+      }, 500);
+      return;
+    }
     const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTarget, shouldCreateUser: true } });
-    btn.disabled = false; btn.querySelector(".label").textContent = "Send me a sign-in link";
+    btn.disabled = false; btn.querySelector(".label").textContent = "Send sign-in link";
     if (error) {
       err.textContent = /rate|too many|seconds/i.test(error.message)
-        ? `Too many sign-in emails right now. ${cfg.googleSignIn ? "Use Google, or wait" : "Wait"} a few minutes and try again.`
+        ? `Too many sign-in emails right now. Use Google, or wait a few minutes and try again.`
         : error.message;
       err.hidden = false;
       return;
@@ -304,19 +342,24 @@ function signInView(errMsg = "") {
     checkInbox(email);
   });
   view.querySelector("#google")?.addEventListener("click", () => {
+    if (localBackend.isDemoSession() || !sb) {
+      localBackend.setDemoSession(true);
+      session = { user: { email: "demo.organiser@college.edu" } };
+      route();
+      return;
+    }
     sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: redirectTarget } });
   });
 }
 
 function checkInbox(email) {
   view.innerHTML = `
-    <section class="stack narrow">
-      <div class="empty">
-        <h3>Check your inbox</h3>
-        <p class="sub" style="color:var(--blue)">We sent a sign-in link to <b>${esc(email)}</b>. Open it on this device. It works once and expires in an hour.</p>
-        <p class="fine" style="margin:10px 0 0">Nothing after a minute? Look in spam, or go back and try again.</p>
-      </div>
-      <button class="btn" type="button" id="again">${I.back} Use a different email</button>
+    <section class="stack narrow" style="max-width:440px;margin:30px auto;text-align:center;padding:24px;background:rgba(15,23,42,0.85);border:1px solid rgba(56,189,248,0.3);border-radius:18px">
+      <div style="font-size:36px;margin-bottom:12px">✉️</div>
+      <h3 style="color:#F8FAFC;font-size:22px;margin:0 0 8px">Check your inbox</h3>
+      <p class="sub" style="color:#38BDF8;font-size:14px;margin:0 0 10px">We sent a sign-in link to <b>${esc(email)}</b>.</p>
+      <p class="fine" style="color:#94A3B8;line-height:1.45;margin:0 0 20px">Open it on this device to sign in. It works once and expires in an hour.</p>
+      <button class="btn small" type="button" id="again" style="background:#1E293B;color:#F8FAFC">${I.back}Use a different email</button>
     </section>`;
   view.querySelector("#again").addEventListener("click", () => signInView());
 }
@@ -350,25 +393,45 @@ async function listView() {
   const stubs = data.map((e) => {
     const total = e.gp_passes?.[0]?.count ?? 0, checked = e.gp_scans?.[0]?.count ?? 0;
     const past = new Date(e.starts_at).getTime() < now - 12 * 3600e3;
+    const pct = total ? Math.min(100, Math.round((checked / total) * 100)) : 0;
     return `
-      <a class="stub" href="#/e/${e.id}" style="${past ? "opacity:.72" : ""}">
+      <a class="stub" href="#/e/${e.id}" style="${past ? "opacity:.75" : ""}">
         <span class="stub-art" style="background-image:url('${artUrl(e.art, true)}')"></span>
         <span class="stub-body">
           <span class="stub-name ink">${escT(e.name)}</span>
           <span class="stub-meta">${esc(fmtWhen(e.starts_at))}${e.venue ? ` · ${esc(e.venue)}` : ""}</span>
+          <div class="stub-progress-wrap" style="margin-top:6px;background:rgba(255,255,255,0.08);height:4px;border-radius:2px;overflow:hidden">
+            <div style="background:linear-gradient(90deg,#38BDF8,#10B981);height:100%;width:${pct}%;border-radius:2px"></div>
+          </div>
         </span>
-        <span class="stub-count">${checked} / ${total}<small>${total ? "checked in" : "no passes yet"}</small></span>
+        <span class="stub-count" style="display:flex;flex-direction:column;align-items:flex-end">
+          <strong style="font-size:16px;color:#F8FAFC">${checked} / ${total}</strong>
+          <small style="color:#94A3B8">${total ? `${pct}% checked in` : "no passes yet"}</small>
+        </span>
       </a>`;
   }).join("");
+
   view.innerHTML = `
     <section class="stack narrow">
-      <div class="head-row"><h1 class="head">Your events</h1></div>
-      ${data.length ? stubs : `
-        <div class="empty">
-          <h3>No events yet</h3>
-          <p class="sub">Make one, drop in your registrations sheet, and every row gets a pass.</p>
+      <div class="head-row" style="display:flex;justify-content:space-between;align-items:center">
+        <h1 class="head" style="margin:0">Your events</h1>
+        <a class="btn-primary compact" href="#/new" style="margin:0">
+          <span class="tix">${I.ticket}</span>
+          <span class="label">Create event</span>
+          <span class="arrow">${I.arrow}</span>
+        </a>
+      </div>
+      ${data.length ? `<div class="stubs-list stack" style="gap:10px">${stubs}</div>` : `
+        <div class="empty" style="text-align:center;padding:40px 20px;background:rgba(15,23,42,0.6);border:1px dashed rgba(56,189,248,0.3);border-radius:20px;margin-top:14px">
+          <div style="font-size:48px;margin-bottom:12px">🎪</div>
+          <h3 style="color:#F8FAFC;font-size:22px;margin:0 0 8px">No events created yet</h3>
+          <p class="sub" style="color:#94A3B8;max-width:380px;margin:0 auto 20px;font-size:14px">Make your first club event, drop in your registrations sheet, and every person gets their cryptographic QR ticket.</p>
+          <a class="btn-primary compact" href="#/new" style="display:inline-flex;margin:0 auto">
+            <span class="tix">${I.ticket}</span>
+            <span class="label">Create your first event</span>
+            <span class="arrow">${I.arrow}</span>
+          </a>
         </div>`}
-      <a class="btn-primary compact" href="#/new" style="margin-top:6px"><span class="tix">${I.ticket}</span><span class="label">New event</span><span class="arrow">${I.arrow}</span></a>
     </section>`;
 }
 
