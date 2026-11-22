@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Your pass · EntryGo</title>
-<meta name="description" content="Your entry pass. Show the QR at the gate.">
+<title>Your Pass · EntryGo Official Digital Pass</title>
+<meta name="description" content="Your official EntryGo cryptographic digital entry pass. Show the QR at the gate.">
 <meta name="theme-color" content="#090D16">
 <meta name="referrer" content="no-referrer">
 <link rel="icon" href="../assets/img/icon.svg" type="image/svg+xml">
@@ -23,66 +23,48 @@
   </script>
 
 </head>
-<body>
-<!--
-THESIS: A pass is a printed gig ticket, not a QR in a card. The ticket IS the page: scalloped stock, a riso crowd strip, the name in blue ink, the event in fluoro pink, one big QR and a tear-off stub. Refuses the e-ticket template (logo bar, grey card, small QR, details table).
-OWN-WORLD: Warm paper #F3EBEA with fibre grain; two riso inks, fluoro pink #FF2FA2 and deep blue #1A43B4, with paper dropouts on every filled surface; Oswald condensed print voice, Barlow Semi Condensed for anything read at length; scalloped and perforated edges; dotted pink rules.
-STORY: Organiser uploads a sheet and gets a pass per row; attendee opens a link and shows the ticket; a gate phone turns green once and red forever after.
-FIRST VIEWPORT: (pass) Centered GatePass wordmark, then the full-width ticket: crowd art strip, name ~48px blue, pink rule, event title ~44px pink uppercase, date and venue, QR ~250px, dotted tear line with side notches, "Show this at the gate".
-FORM: Pinned by the user: concept A "gig poster" (ui-concepts/gatepass/gatepass_a_gigposter.png, chosen 11 Nov 2026), comp-led. No seed roll: a user-pinned direction beats the roll.
-FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
--->
+<body class="pass-user-body">
 <main class="app">
-  <header class="mast mast-center">
-    <div class="brand-group" style="align-items:center">
-      <a class="brand-link" href="../" title="Return to Home">
-        <img class="brand-logo-img" src="../assets/img/logo.png" alt="EntryGo Logo">
-        <span class="logo ink">EntryGo</span>
-      </a>
-      <a class="brand-by" href="https://www.shahdhairyah.in/" target="_blank" rel="noopener">By Shah Dhairya</a>
+  <!-- High-Level Clean Header for Attendee View -->
+  <header class="user-pass-header">
+    <a class="brand-link" href="../" title="Return to Home">
+      <img class="brand-logo-img" src="../assets/img/logo.png" alt="EntryGo Logo">
+      <span class="logo ink">EntryGo</span>
+    </a>
+    <div class="user-pass-status-pill">
+      <span class="pulse-dot"></span>
+      <span>Official Pass</span>
     </div>
   </header>
 
+  <!-- Pass View Slot -->
   <div id="view" aria-live="polite">
     <div class="skeleton" style="height:min(150vw,720px)" aria-label="Loading your pass"></div>
   </div>
 
-  
-      <footer class="foot">
-    <!-- Top Brand Row with Live Pill & Neon Email Capsule -->
-    <div class="foot-top-row">
-      <div class="foot-brand-col">
-        <img src="../assets/img/logo.png" alt="EntryGo" style="width:34px;height:34px;border-radius:10px;box-shadow:0 0 15px rgba(56,189,248,0.35)">
-        <div style="text-align:left">
-          <div style="display:flex;align-items:center;gap:8px">
-            <strong style="font-family:var(--f-display);font-size:24px;letter-spacing:0.04em;color:#F8FAFC">EntryGo</strong>
-            <span style="font-size:10px;font-weight:800;color:#38BDF8;background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.3);padding:2px 8px;border-radius:12px;letter-spacing:0.05em">LIVE PRO</span>
-          </div>
-          <p style="margin:2px 0 0;font-size:12px;color:#94A3B8">High-Velocity QR Event Admission Engine</p>
-        </div>
+  <!-- High-Level User Footer with Official Support -->
+  <footer class="user-pass-footer">
+    <div class="user-foot-brand-row">
+      <div style="display:flex;align-items:center;gap:8px">
+        <strong style="font-family:var(--f-display);font-size:20px;letter-spacing:0.04em;color:#F8FAFC">EntryGo</strong>
+        <span style="font-size:10px;font-weight:700;color:#38BDF8;background:rgba(56,189,248,0.15);padding:2px 7px;border-radius:10px">VERIFIED PASS</span>
       </div>
-      <a class="foot-contact-pill" href="mailto:entrygo.live@shahdhairyah.in" title="Direct inquiries & technical support">
-        <span class="mail-icon-glow">✉</span>
+      <a href="../" style="font-size:11.5px;color:#94A3B8;text-decoration:none">Create Event ➔</a>
+    </div>
+
+    <!-- Official Inquiries & Support -->
+    <div class="user-foot-support-box">
+      <span class="user-support-label">Need assistance with your pass or event?</span>
+      <a class="user-contact-pill" href="mailto:entrygo.live@shahdhairyah.in" title="Official Support & Assistance">
+        <span style="font-size:13px">✉️</span>
         <span>entrygo.live@shahdhairyah.in</span>
       </a>
     </div>
 
-    <!-- Creative Navigation Pills -->
-    <div class="foot-nav-capsules">
-      <a class="foot-nav-item" href="../">🎪 Organiser Console</a>
-      <a class="foot-nav-item" href="../gate/">⚡ Gate Scanner</a>
-      <a class="foot-nav-item" href="../p/">🎟️ Pass Viewer</a>
-      <a class="foot-nav-item" href="../sitemap.xml" target="_blank" rel="noopener">🗺️ Sitemap</a>
-      <a class="foot-nav-item" href="https://github.com/shahdhairyah/EntryGo" target="_blank" rel="noopener">🐙 GitHub Source</a>
-    </div>
-
-    <!-- Bottom Metadata with Developer Link -->
-    <div class="foot-bottom-line">
-      <span>© 2026 EntryGo · Engineered by <a href="https://www.shahdhairyah.in/" target="_blank" rel="noopener" style="color:#38BDF8;font-weight:700;text-decoration:none">Shah Dhairya</a></span>
-      <span style="display:inline-flex;align-items:center;gap:6px;color:#94A3B8">
-        <span style="width:7px;height:7px;border-radius:50%;background:#10B981;box-shadow:0 0 8px #10B981"></span>
-        <span>192-bit Cryptographic QR System</span>
-      </span>
+    <!-- Copyright & Integrity Assurance -->
+    <div class="user-foot-copyright">
+      <span>© 2026 EntryGo · Developed by <a href="https://www.shahdhairyah.in/" target="_blank" rel="noopener" style="color:#38BDF8;font-weight:700;text-decoration:none">Shah Dhairya</a></span>
+      <span>192-bit Cryptographic Security</span>
     </div>
   </footer>
   <div class="scallops inked" aria-hidden="true"></div>

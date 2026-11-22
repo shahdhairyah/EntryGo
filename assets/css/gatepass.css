@@ -6769,3 +6769,118 @@ body::after {
   color: #38BDF8;
   transform: translateY(-1px);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   USER-FACING PASS PAGE (p/index.html) ULTRA-CREATIVE SUITE
+   ═══════════════════════════════════════════════════════════════ */
+
+/* User Pass Top Header: Clean Center Floating Badge */
+.user-pass-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: rgba(10, 15, 29, 0.85) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  border-radius: 24px !important;
+  padding: 10px 18px !important;
+  margin: 0 auto 20px !important;
+  max-width: 440px !important;
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.9), 0 0 25px rgba(56, 189, 248, 0.15) !important;
+}
+
+.user-pass-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34D399;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.user-pass-status-pill .pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
+  animation: pulseDot 1.6s infinite;
+}
+
+/* User-facing Compact Clean Footer */
+.user-pass-footer {
+  max-width: 440px !important;
+  margin: 30px auto 16px !important;
+  padding: 22px 18px !important;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.75) 0%, rgba(7, 11, 20, 0.95) 100%) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(56, 189, 248, 0.2) !important;
+  border-radius: 22px !important;
+  text-align: center !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.85) !important;
+}
+
+.user-foot-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 12px;
+}
+
+.user-foot-support-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.user-support-label {
+  font-size: 11px;
+  color: #94A3B8;
+  letter-spacing: 0.04em;
+}
+
+.user-contact-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(129, 140, 248, 0.12) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #38BDF8;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 15px rgba(56, 189, 248, 0.15);
+}
+
+.user-contact-pill:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38BDF8;
+  color: #FFFFFF;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(56, 189, 248, 0.35);
+}
+
+.user-foot-copyright {
+  font-size: 11px;
+  color: #64748B;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
