@@ -6884,3 +6884,132 @@ body::after {
   padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   APEX ULTRA-PREMIUM HEADER REFINEMENT ENGINE
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Universal Header Bar: Sleek Floating Glass Nav */
+.mast, .user-pass-header {
+  position: sticky !important;
+  top: 12px !important;
+  z-index: 100 !important;
+  background: rgba(10, 16, 32, 0.82) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.28) !important;
+  border-radius: 20px !important;
+  padding: 10px 20px !important;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.85), 
+              0 0 30px rgba(56, 189, 248, 0.12),
+              inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Dynamic Ambient Glow Line along Header Top */
+.mast::before, .user-pass-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 5%;
+  right: 5%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #38BDF8 30%, #818CF8 50%, #EC4899 70%, transparent);
+  border-radius: 2px;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 6px #38BDF8);
+}
+
+/* Brand Link and Logo */
+.brand-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.brand-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  text-decoration: none !important;
+}
+
+.brand-logo-img {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.45) !important;
+  border: 1.5px solid rgba(56, 189, 248, 0.4) !important;
+  background: #090D16 !important;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.brand-link:hover .brand-logo-img {
+  transform: rotate(-6deg) scale(1.08);
+}
+
+.logo.ink {
+  font-family: var(--f-display) !important;
+  font-size: 28px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.05em !important;
+  background: linear-gradient(135deg, #FFFFFF 0%, #E0F2FE 40%, #38BDF8 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.3));
+}
+
+/* User Badge Pill in Organiser Header */
+.user-badge-pill {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  border-radius: 30px !important;
+  padding: 4px 12px 4px 5px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+  transition: all 0.2s ease !important;
+}
+
+.user-badge-pill:hover {
+  border-color: #38BDF8 !important;
+  box-shadow: 0 4px 20px rgba(56, 189, 248, 0.25) !important;
+}
+
+.user-badge-avatar {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #38BDF8 0%, #818CF8 100%) !important;
+  color: #070B16 !important;
+  font-weight: 900 !important;
+  font-size: 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5) !important;
+}
+
+/* Navigation items in header on larger screens */
+.mast-role {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+/* Responsive adjustment for small mobile screens */
+@media (max-width: 480px) {
+  .mast, .user-pass-header {
+    padding: 8px 14px !important;
+    top: 8px !important;
+    border-radius: 16px !important;
+  }
+  .logo.ink {
+    font-size: 24px !important;
+  }
+  .brand-logo-img {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}
