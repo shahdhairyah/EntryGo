@@ -5408,3 +5408,163 @@ body {
 .badge-status-sep {
   opacity: 0.6;
 }
+
+/* ── Attendee Ticket Redesign Enhancements ── */
+.ticket.ticket-vip {
+  border: 1.5px solid #F59E0B !important;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(245, 158, 11, 0.25) !important;
+}
+.ticket.ticket-backstage {
+  border: 1.5px solid #EC4899 !important;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(236, 72, 153, 0.25) !important;
+}
+.ticket.ticket-volunteer {
+  border: 1.5px solid #10B981 !important;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(16, 185, 129, 0.25) !important;
+}
+.ticket.ticket-standard {
+  border: 1.5px solid rgba(56, 189, 248, 0.45) !important;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(56, 189, 248, 0.15) !important;
+}
+
+.qr-canvas-holder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #FFFFFF;
+  padding: 12px 12px 8px;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 0 2px rgba(56, 189, 248, 0.35);
+  margin: 0 auto;
+}
+.qr-canvas-holder svg {
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 4px !important;
+  width: min(52vw, 210px) !important;
+  height: auto !important;
+  background: transparent !important;
+}
+.qr-token-id {
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #0F172A;
+  margin-top: 6px;
+  background: #F1F5F9;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.qr-used-dim {
+  filter: grayscale(1) opacity(0.35);
+}
+.stamp-word {
+  font-size: 26px;
+  letter-spacing: 0.15em;
+  color: #FF2FA2;
+  font-weight: 900;
+  display: block;
+}
+
+/* ── Organiser Bulk Send Modal ── */
+.queue-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 7, 15, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: modalFade 0.2s ease-out;
+}
+.queue-modal-card {
+  width: 100%;
+  max-width: 620px;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: #090D16;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 35px rgba(56, 189, 248, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+.queue-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.queue-body {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.queue-progress-bar-wrap {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  height: 8px;
+  overflow: hidden;
+  position: relative;
+}
+.queue-progress-fill {
+  background: linear-gradient(90deg, #38BDF8, #818CF8);
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+.current-recipient-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+}
+.template-editor-box {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+}
+.template-var-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.var-chip {
+  font-size: 11px;
+  background: #1E293B;
+  color: #38BDF8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 2px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: monospace;
+}
+.sent-status-badge {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.sent-status-sent {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.sent-status-unsent {
+  background: rgba(148, 163, 184, 0.1);
+  color: #94A3B8;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+

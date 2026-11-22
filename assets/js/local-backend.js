@@ -28,11 +28,11 @@ export function initDemoData() {
   if (!events.length) {
     const defaultEvent = {
       id: "demo-event-1",
-      name: "EntryGo Launch Summit 2026",
-      club: "EntryGo Tech & Music Collective",
+      name: "HackNova College Hackathon & Tech Fest",
+      club: "Coding & Robotics Club",
       starts_at: new Date(Date.now() + 86400000 * 2).toISOString(),
-      venue: "Grand Cyber Arena / Hall A",
-      art: 0,
+      venue: "Main Auditorium, Campus Block 4",
+      art: 5,
       gate_code: "ZX889900",
       created_at: new Date().toISOString()
     };
@@ -43,18 +43,47 @@ export function initDemoData() {
       {
         id: "p-1",
         event_id: "demo-event-1",
-        name: "Alex Vance",
-        contact: "alex.vance@tech.io",
+        name: "Dhruv Parmar",
+        contact: "dhruv.parmar@gmail.com",
+        tier: "VIP",
         token: "ZXDEMOTOKEN123456789012345678901",
-        created_at: new Date().toISOString()
+        created_at: new Date(Date.now() - 3600000 * 5).toISOString()
       },
       {
         id: "p-2",
         event_id: "demo-event-1",
-        name: "Devon Miller",
-        contact: "+1 555-0199",
+        name: "Ananya Sharma",
+        contact: "9876543210",
+        tier: "Backstage",
         token: "ZXDEMOTOKEN987654321098765432109",
-        created_at: new Date().toISOString()
+        created_at: new Date(Date.now() - 3600000 * 4).toISOString()
+      },
+      {
+        id: "p-3",
+        event_id: "demo-event-1",
+        name: "Rohan Varma",
+        contact: "rohan.v@college.edu",
+        tier: "Volunteer",
+        token: "ZXDEMOTOKEN456789012345678901234",
+        created_at: new Date(Date.now() - 3600000 * 3).toISOString()
+      },
+      {
+        id: "p-4",
+        event_id: "demo-event-1",
+        name: "Pooja Patel",
+        contact: "9823456789",
+        tier: "Standard",
+        token: "ZXDEMOTOKEN678901234567890123456",
+        created_at: new Date(Date.now() - 3600000 * 2).toISOString()
+      },
+      {
+        id: "p-5",
+        event_id: "demo-event-1",
+        name: "Siddharth Joshi",
+        contact: "siddharth.j@gmail.com",
+        tier: "Standard",
+        token: "ZXDEMOTOKEN890123456789012345678",
+        created_at: new Date(Date.now() - 3600000 * 1).toISOString()
       }
     ];
     setStorage(STORAGE_KEY_PASSES, defaultPasses);
