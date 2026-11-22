@@ -6604,3 +6604,168 @@ body::after {
   flex-wrap: wrap;
   gap: 8px;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   FUTURISTIC CREATIVE HEADER & FOOTER OVERHAUL
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Animated rainbow border gradient for Header */
+.mast {
+  position: relative !important;
+  background: rgba(8, 13, 26, 0.85) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 22px !important;
+  padding: 12px 24px !important;
+  margin-bottom: 28px !important;
+  box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.9), 0 0 35px rgba(56, 189, 248, 0.15) !important;
+  overflow: hidden;
+}
+
+.mast::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #38BDF8, #818CF8, #EC4899, transparent);
+  animation: laserSweep 4s linear infinite;
+}
+
+@keyframes laserSweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.brand-logo-img {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.brand-link:hover .brand-logo-img {
+  transform: rotate(-8deg) scale(1.1);
+}
+
+.logo.ink {
+  font-size: 32px !important;
+  font-weight: 900 !important;
+  background: linear-gradient(135deg, #FFFFFF 0%, #38BDF8 50%, #C084FC 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
+}
+
+.brand-by {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: #38BDF8 !important;
+  background: rgba(56, 189, 248, 0.08) !important;
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  padding: 4px 12px !important;
+  border-radius: 20px !important;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.15) !important;
+}
+
+.brand-by:hover {
+  background: linear-gradient(135deg, #0284C7, #4F46E5) !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+  transform: translateY(-2px) scale(1.05) !important;
+}
+
+/* Master Creative Footer */
+.foot {
+  position: relative !important;
+  overflow: hidden !important;
+  margin-top: 60px !important;
+  padding: 32px 28px !important;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.7) 0%, rgba(7, 11, 20, 0.98) 100%) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  border-radius: 26px !important;
+  box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.95), 0 0 45px rgba(56, 189, 248, 0.1) !important;
+}
+
+.foot::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.8), rgba(129, 140, 248, 0.8), transparent);
+}
+
+/* Glowing Neon Support Capsule */
+.foot-contact-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 18px !important;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.95) 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+  border-radius: 30px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #F8FAFC !important;
+  box-shadow: 0 4px 20px rgba(56, 189, 248, 0.2) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.foot-contact-pill .mail-icon-glow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0284C7, #38BDF8);
+  color: #070B16;
+  font-size: 12px;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}
+
+.foot-contact-pill:hover {
+  border-color: #38BDF8 !important;
+  box-shadow: 0 8px 30px rgba(56, 189, 248, 0.5) !important;
+  transform: translateY(-2px) scale(1.03) !important;
+  color: #38BDF8 !important;
+}
+
+/* Navigation Pill Badges in Footer */
+.foot-nav-capsules {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 12px 0;
+}
+
+.foot-nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #CBD5E1;
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+
+.foot-nav-item:hover {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #38BDF8;
+  transform: translateY(-1px);
+}
