@@ -636,7 +636,7 @@ async function eventView(id) {
   } catch (e) { return fail(e); }
 
   passes.sort((a, b) => a.created_at.localeCompare(b.created_at) || a.name.localeCompare(b.name));
-  const state = { ev, passes, first: new Map(), bounced: 0, upload: null, filter: "", filterStatus: "all", pageSize: 10, shown: 10 };
+  const state = { ev, passes, first: new Map(), bounced: 0, upload: null, filter: "", filterStatus: "all", filterTier: "all", pageSize: 10, shown: 10 };
   for (const s of scans) s.is_first ? state.first.set(s.pass_id, s) : state.bounced++;
 
   document.title = `${typo(ev.name)} · EntryGo`;
@@ -644,7 +644,8 @@ async function eventView(id) {
     <a class="backlink" href="#">${I.back}Your events</a>
     <div class="dash">
       <div class="left stack">
-        <div class="poster" id="poster">
+        <div class="poster" id="poster" style="position:relative">
+          <a class="btn small" href="#/e/${id}/edit" style="position:absolute;top:12px;right:12px;background:rgba(15,23,42,0.85);backdrop-filter:blur(6px);border-color:rgba(255,255,255,0.2);color:#F8FAFC;font-size:12px;padding:4px 10px;z-index:2">${I.gear || "✏️"} Edit event</a>
           <h1 class="poster-title ink">${escT(ev.name)}</h1>
           ${ev.club ? `<p class="poster-club">${esc(ev.club)}</p>` : ""}
           <span class="poster-when">${esc(fmtWhen(ev.starts_at))}${ev.venue ? ` · ${esc(ev.venue)}` : ""}</span>
@@ -831,26 +832,35 @@ function renderReg(state) {
   const opt = (sel, none) => `${none ? `<option value="-1" ${sel === -1 ? "selected" : ""}>None</option>` : ""}${a.cols.map((c) => `<option value="${c.i}" ${c.i === sel ? "selected" : ""}>${esc(c.label)}</option>`).join("")}`;
 
   slot.innerHTML = `
+    <!-- Step Flow Header -->
+    <div style="display:flex;gap:4px;margin-bottom:8px">
+      <div style="flex:1;background:rgba(16,185,129,0.2);border:1px solid #10B981;border-radius:6px;padding:4px 8px;font-size:11px;color:#34D399;font-weight:700">✓ 1. Upload</div>
+      <div style="flex:1;background:rgba(56,189,248,0.2);border:1px solid #38BDF8;border-radius:6px;padding:4px 8px;font-size:11px;color:#38BDF8;font-weight:700">2. Map Columns</div>
+      <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 8px;font-size:11px;color:#94A3B8;font-weight:600">3. Generate Passes</div>
+    </div>
+
     <button class="row" type="button" id="toggle" aria-expanded="${open ? "true" : "false"}">
       <span style="width:30px;height:36px;display:block">${I.doc}</span>
-      <span class="grow"><span class="fname">${esc(fileName)} · ${plural(a.body.length, "row")}</span>${skipped ? `<small>${n} new · skipping ${skipped}</small>` : ""}</span>
+      <span class="grow"><span class="fname">${esc(fileName)} · ${plural(a.body.length, "row")}</span>${skipped ? `<small style="color:#FBBF24">⚠️ ${n} new · skipping ${skipped}</small>` : `<small style="color:#34D399">${n} ready to generate</small>`}</span>
       <span class="chev" style="transition:rotate .2s;${open ? "rotate:90deg" : ""}">${I.chev}</span>
     </button>
     <div class="upload-preview" ${open ? "" : "hidden"}>
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px">
-        <label class="field"><span>Name column</span><select class="select" id="nameCol">${opt(nameCol)}</select></label>
+        <label class="field"><span>Name column *</span><select class="select" id="nameCol">${opt(nameCol)}</select></label>
         <label class="field"><span>Contact column</span><select class="select" id="contactCol">${opt(contactCol, true)}</select></label>
         <label class="field"><span>Tier column</span><select class="select" id="tierCol">${opt(tierCol, true)}</select></label>
         <label class="field">
-          <span>Batch Pass Tier</span>
+          <span>Default Tier (for rows without tier)</span>
           <select class="select" id="batchTier">
-            <option value="Standard" ${defaultTier === "Standard" ? "selected" : ""}>Standard</option>
+            <option value="Standard" ${defaultTier === "Standard" ? "selected" : ""}>🎟️ Standard</option>
             <option value="VIP" ${defaultTier === "VIP" ? "selected" : ""}>⭐ VIP</option>
             <option value="Volunteer" ${defaultTier === "Volunteer" ? "selected" : ""}>🤝 Volunteer</option>
             <option value="Backstage" ${defaultTier === "Backstage" ? "selected" : ""}>⚡ Backstage</option>
           </select>
         </label>
       </div>
+
+      <div style="margin:10px 0 4px;font-size:12px;font-weight:700;color:#94A3B8">Preview of first 5 rows:</div>
       <table class="preview-table">
         <thead><tr><th>Name</th><th>Contact</th><th>Tier Tag</th></tr></thead>
         <tbody>${res.passes.slice(0, 5).map((p) => {
@@ -858,8 +868,17 @@ function renderReg(state) {
           return `<tr><td>${esc(p.name)}</td><td>${esc(p.contact || "—")}</td><td><span class="mini-tier ${tier.cssClass}">${tier.icon} ${tier.shortLabel}</span></td></tr>`;
         }).join("") || `<tr><td colspan="3">No usable rows. Pick the column that has names.</td></tr>`}</tbody>
       </table>
-      ${n > 5 ? `<p class="fine" style="margin:0">…and ${n - 5} more.</p>` : ""}
-      <button class="btn small pinkline" type="button" id="cancelUp" style="align-self:flex-start">${I.x}Cancel</button>
+      ${n > 5 ? `<p class="fine" style="margin:4px 0 8px">…and ${n - 5} more rows parsed.</p>` : ""}
+
+      <!-- Step 3 Summary Box -->
+      <div style="background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);border-radius:10px;padding:12px;margin:10px 0;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong style="color:#F8FAFC;font-size:14px">Step 3 Summary:</strong>
+          <div style="color:#38BDF8;font-size:13px;margin-top:2px"><strong>${n}</strong> passes will be created</div>
+          ${skipped ? `<div style="color:#FBBF24;font-size:11px;margin-top:2px">⚠️ Warnings: ${skipped}</div>` : ""}
+        </div>
+        <button class="btn small pinkline" type="button" id="cancelUp" style="align-self:center">${I.x}Cancel</button>
+      </div>
     </div>
     <button class="btn-primary" type="button" id="gen" ${n ? "" : "disabled"}>
       <span class="tix">${I.ticket}</span>
@@ -1030,15 +1049,64 @@ function renderAnalytics(state) {
   `;
 }
 
-// ── checked-in counter ──
+// ── checked-in counter & live event statistics ──
 function renderStat(state, bump = false) {
   const total = state.passes.length, checked = state.first.size;
+  const notIn = Math.max(0, total - checked);
+  const pct = total ? Math.min(100, Math.round((checked / total) * 100)) : 0;
   const el = view.querySelector("#stat");
+
+  // Breakdown counts by tier
+  let vipCount = 0, backstageCount = 0, volunteerCount = 0, standardCount = 0;
+  for (const p of state.passes) {
+    const tr = getTier(p);
+    if (tr.id === "vip") vipCount++;
+    else if (tr.id === "backstage") backstageCount++;
+    else if (tr.id === "volunteer") volunteerCount++;
+    else standardCount++;
+  }
+
   el.innerHTML = `
     <span class="dot">${I.dotCheck}</span>
-    <p class="stat-label">Checked in</p>
-    <div class="stat-line"><p class="stat-num ink" id="snum">${checked} / ${total}</p><div class="bar" aria-hidden="true"><i style="--p:${total ? Math.min(1, checked / total) : 0}"></i></div></div>
-    ${state.bounced ? `<p class="stat-note">${plural(state.bounced, "repeat scan")} bounced at the gate</p>` : ""}`;
+    <p class="stat-label" style="display:flex;justify-content:space-between;align-items:center">
+      <span>Live Gate Check-in</span>
+      <span style="font-size:12px;color:#38BDF8;font-weight:700">${pct}% Admitted</span>
+    </p>
+    <div class="stat-line">
+      <p class="stat-num ink" id="snum">${checked} / ${total}</p>
+      <div class="bar" aria-hidden="true"><i style="--p:${total ? Math.min(1, checked / total) : 0}"></i></div>
+    </div>
+    
+    <!-- 4-Stat Live Metric Row -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0 8px;text-align:center">
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:6px 2px">
+        <div style="font-size:15px;font-weight:800;color:#F8FAFC">${total}</div>
+        <div style="font-size:10px;color:#94A3B8;text-transform:uppercase;font-weight:600">Total</div>
+      </div>
+      <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:8px;padding:6px 2px">
+        <div style="font-size:15px;font-weight:800;color:#34D399">${checked}</div>
+        <div style="font-size:10px;color:#34D399;text-transform:uppercase;font-weight:600">Checked In</div>
+      </div>
+      <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:6px 2px">
+        <div style="font-size:15px;font-weight:800;color:#FBBF24">${notIn}</div>
+        <div style="font-size:10px;color:#FBBF24;text-transform:uppercase;font-weight:600">Not In</div>
+      </div>
+      <div style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.25);border-radius:8px;padding:6px 2px">
+        <div style="font-size:15px;font-weight:800;color:#FB7185">${state.bounced}</div>
+        <div style="font-size:10px;color:#FB7185;text-transform:uppercase;font-weight:600">Bounced</div>
+      </div>
+    </div>
+
+    <!-- Tier Breakdown Row -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px">
+      <span style="color:#64748B;font-weight:700">Tiers:</span>
+      <span class="mini-tier tier-vip" style="margin:0">⭐ VIP: ${vipCount}</span>
+      <span class="mini-tier tier-backstage" style="margin:0">⚡ Backstage: ${backstageCount}</span>
+      <span class="mini-tier tier-volunteer" style="margin:0">🤝 Volunteer: ${volunteerCount}</span>
+      <span class="mini-tier tier-standard" style="margin:0">🎟️ Standard: ${standardCount}</span>
+    </div>
+
+    ${state.bounced ? `<p class="stat-note" style="margin-top:8px">${plural(state.bounced, "repeat scan")} bounced at the gate</p>` : ""}`;
   el.setAttribute("aria-label", `Checked in ${checked} of ${total}`);
   if (bump) { const n = el.querySelector("#snum"); n.animate([{ transform: "scale(1.08)", color: "#FF2FA2" }, { transform: "scale(1)" }], { duration: 520, easing: "cubic-bezier(.16,1,.3,1)" }); }
 }
@@ -1046,26 +1114,56 @@ function renderStat(state, bump = false) {
 // ── gate code & links ──
 function renderGate(state, showQr = false) {
   const ev = state.ev, el = view.querySelector("#gatebox");
+  const fullGateUrl = gateUrl(ev.gate_code);
   el.innerHTML = `
     <div>
-      <p class="kicker-free" style="margin:0">Gate Access</p>
-      <p class="gate-code ink" aria-label="Gate code ${fmtCode(ev.gate_code).split("").join(" ")}">${fmtCode(ev.gate_code)}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <p class="kicker-free" style="margin:0">Gate Passcode</p>
+        <a href="${esc(fullGateUrl)}" target="_blank" rel="noopener" style="font-size:12px;color:#38BDF8;font-weight:700;display:inline-flex;align-items:center;gap:4px">
+          Open Gate Scanner ${I.open}
+        </a>
+      </div>
+      <p class="gate-code ink" aria-label="Gate code ${fmtCode(ev.gate_code).split("").join(" ")}" style="font-size:38px;letter-spacing:0.08em;margin:8px 0">${fmtCode(ev.gate_code)}</p>
     </div>
-    <p class="fine">Staff open <b>${esc(gateUrl("").replace(/#$/, "").replace(/^https?:\/\//, ""))}</b> and type this code to scan. The first scan admits the attendee.</p>
-    <div class="btns">
-      <button class="btn small" type="button" id="cpGate">${I.link}Copy gate link</button>
+    <p class="fine">Gate staff open <b>${esc(gateUrl("").replace(/#$/, "").replace(/^https?:\/\//, ""))}</b> and type this 8-character code to scan attendees. The first scan admits the attendee.</p>
+    <div class="btns" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn small" type="button" id="cpGate">${I.copy}Copy code</button>
+      <button class="btn small" type="button" id="shareGate">${I.chat}Share code</button>
       <button class="btn small" type="button" id="qrGate" aria-expanded="${showQr}">${I.qr}${showQr ? "Hide Gate QR" : "Show Gate QR"}</button>
-      <button class="btn small" type="button" id="rot">${I.refresh}New code</button>
+      <button class="btn small danger" type="button" id="rot" style="border-color:rgba(244,63,94,0.3)">${I.refresh}New code</button>
     </div>
-    ${showQr ? `<div class="gate-qr">${qrSvg(gateUrl(ev.gate_code), { label: "QR to join the gate" })}<p class="fine" style="color:var(--blue);margin:0">Staff scan this with their phone camera to open the scanner with the code filled in.</p></div>` : ""}`;
+    ${showQr ? `<div class="gate-qr">${qrSvg(fullGateUrl, { label: "QR to join the gate" })}<p class="fine" style="color:var(--blue);margin:0">Staff scan this with their phone camera to open the scanner with the code filled in.</p></div>` : ""}`;
 
-  el.querySelector("#cpGate").addEventListener("click", async () => { (await copyText(gateUrl(ev.gate_code))) ? toast("Gate link copied") : toast("Couldn't copy", "x"); });
+  el.querySelector("#cpGate").addEventListener("click", async () => {
+    (await copyText(ev.gate_code)) ? toast(`Gate code ${ev.gate_code} copied!`) : toast("Couldn't copy", "x");
+  });
+
+  el.querySelector("#shareGate").addEventListener("click", async () => {
+    const shareText = `EntryGo Gate Code for ${ev.name}:
+Code: ${fmtCode(ev.gate_code)}
+Direct Link: ${fullGateUrl}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `Gate Access - ${ev.name}`, text: shareText, url: fullGateUrl });
+        return;
+      } catch {}
+    }
+    (await copyText(shareText)) ? toast("Gate access instructions copied to clipboard!") : toast("Couldn't copy", "x");
+  });
+
   el.querySelector("#qrGate").addEventListener("click", () => renderGate(state, !showQr));
 
   let armed = 0;
   el.querySelector("#rot").addEventListener("click", async (e) => {
     const b = e.currentTarget;
-    if (Date.now() - armed > 4000) { armed = Date.now(); b.innerHTML = `${I.refresh}Tap again: old code stops working`; return; }
+    if (Date.now() - armed > 4500) {
+      armed = Date.now();
+      b.innerHTML = `${I.refresh}⚠️ Tap again: old code stops working immediately!`;
+      b.style.borderColor = "#F43F5E";
+      b.style.color = "#FDA4AF";
+      setTimeout(() => { if (b.isConnected) { b.innerHTML = `${I.refresh}New code`; b.style.borderColor = ""; b.style.color = ""; } }, 4500);
+      return;
+    }
     b.disabled = true;
     let data;
     if (localBackend.isDemoSession() || !sb) {
@@ -1078,11 +1176,352 @@ function renderGate(state, showQr = false) {
     }
     ev.gate_code = data;
     renderGate(state, showQr);
-    toast("New gate code. Staff need to re-join.");
+    toast("New gate code active. Previous code has been revoked.");
   });
 }
 
 // ── passes: tools + list ──
+
+// ── A6 Bulk Sending: interactive Send Queue modal & template editor ──
+const DEFAULT_MSG_TEMPLATE = `🎟️ Official Entry Pass for {event}
+
+Hi {name}! Your {tier} entry pass is confirmed and ready.
+
+Pass Link: {link}
+
+⚠️ IMPORTANT: Turn screen brightness to max at the gate. This pass works once.
+
+See you at the event!
+Powered by EntryGo · https://entrygo.live`;
+
+function getSavedTemplate() {
+  return localStorage.getItem("gp_msg_template") || DEFAULT_MSG_TEMPLATE;
+}
+
+function saveTemplate(tpl) {
+  localStorage.setItem("gp_msg_template", tpl);
+}
+
+function formatTpl(tpl, state, p) {
+  const ev = state.ev;
+  const tier = getTier(p);
+  const tierLabel = tier.shortLabel === "VIP" ? "VIP" : tier.shortLabel === "VOLUNTEER" ? "Volunteer" : tier.shortLabel === "BACKSTAGE" ? "Backstage" : "Standard";
+  return tpl
+    .replace(/{name}/g, p.name)
+    .replace(/{event}/g, ev.name)
+    .replace(/{tier}/g, tierLabel)
+    .replace(/{link}/g, passUrl(p.token));
+}
+
+function getSentStatus(passId) {
+  const ts = localStorage.getItem(`gp_sent_${passId}`);
+  if (!ts) return null;
+  return new Date(ts);
+}
+
+function markPassSent(passId) {
+  const now = new Date().toISOString();
+  localStorage.setItem(`gp_sent_${passId}`, now);
+  return now;
+}
+
+function maskContact(contact) {
+  if (!contact) return "no contact";
+  const c = contact.trim();
+  if (isEmail(c)) {
+    const parts = c.split("@");
+    if (parts[0].length <= 2) return `${parts[0][0]}***@${parts[1]}`;
+    return `${parts[0].slice(0, 2)}***${parts[0].slice(-1)}@${parts[1]}`;
+  }
+  if (isPhone(c)) {
+    const d = c.replace(/\D/g, "");
+    if (d.length >= 10) {
+      return `${d.slice(0, 2)}••••••${d.slice(-2)}`;
+    }
+  }
+  return c;
+}
+
+function openSendQueue(state) {
+  document.querySelector(".queue-modal-overlay")?.remove();
+
+  let queueFilter = "all"; // 'all', 'unsent', 'sent'
+  let curIdx = 0;
+  let tpl = getSavedTemplate();
+
+  const getFilteredList = () => {
+    return state.passes.filter(p => {
+      const isSent = !!getSentStatus(p.id);
+      if (queueFilter === "unsent") return !isSent;
+      if (queueFilter === "sent") return isSent;
+      return true;
+    });
+  };
+
+  const overlay = document.createElement("div");
+  overlay.className = "queue-modal-overlay";
+
+  function renderQueueModal() {
+    const list = getFilteredList();
+    if (curIdx >= list.length) curIdx = Math.max(0, list.length - 1);
+    const p = list[curIdx];
+
+    const totalAll = state.passes.length;
+    const sentCountAll = state.passes.filter(x => !!getSentStatus(x.id)).length;
+    const pct = totalAll ? Math.min(100, Math.round((sentCountAll / totalAll) * 100)) : 0;
+
+    let sendAction = null;
+    let formattedMsg = "";
+    let isAlreadySent = false;
+    let sentTimeStr = "";
+
+    if (p) {
+      formattedMsg = formatTpl(tpl, state, p);
+      const c = p.contact || "";
+      const sentTime = getSentStatus(p.id);
+      isAlreadySent = !!sentTime;
+      if (isAlreadySent) sentTimeStr = fmtTime(sentTime);
+
+      if (isEmail(c)) {
+        sendAction = {
+          type: "email",
+          label: "Send by Email",
+          icon: I.mail,
+          href: `mailto:${encodeURIComponent(c)}?subject=${encodeURIComponent(`Your pass for ${state.ev.name}`)}&body=${encodeURIComponent(formattedMsg)}`
+        };
+      } else if (isPhone(c)) {
+        let d = c.replace(/\D/g, "");
+        if (d.length === 10) d = "91" + d;
+        if (d.length === 11 && d.startsWith("0")) d = "91" + d.slice(1);
+        sendAction = {
+          type: "whatsapp",
+          label: "Send on WhatsApp",
+          icon: I.chat,
+          href: `https://wa.me/${d}?text=${encodeURIComponent(formattedMsg)}`
+        };
+      }
+    }
+
+    const tier = p ? getTier(p) : null;
+
+    overlay.innerHTML = `
+      <div class="queue-modal-card">
+        <div class="queue-header">
+          <div>
+            <h3 style="margin:0;font-size:18px;color:#F8FAFC;display:flex;align-items:center;gap:8px">
+              <span>🚀</span>
+              <span>Send All Passes Queue</span>
+            </h3>
+            <p style="margin:2px 0 0;font-size:12px;color:#94A3B8">Step through attendees and dispatch verified tickets directly</p>
+          </div>
+          <button class="icon-btn" type="button" id="closeQueueModal" style="width:32px;height:32px">${I.x}</button>
+        </div>
+
+        <div class="queue-body">
+          <!-- Overall Progress -->
+          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <span style="font-size:13px;font-weight:700;color:#F8FAFC">Dispatch Progress: <strong style="color:#38BDF8">${sentCountAll} of ${totalAll} sent</strong></span>
+              <span style="font-size:12px;color:#94A3B8">${pct}%</span>
+            </div>
+            <div class="queue-progress-bar-wrap">
+              <div class="queue-progress-fill" style="width:${pct}%"></div>
+            </div>
+          </div>
+
+          <!-- Queue Filter Tabs -->
+          <div style="display:flex;gap:6px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:10px">
+            <span style="font-size:11px;color:#64748B;font-weight:700">Filter:</span>
+            <button class="pill-btn ${queueFilter === "all" ? "active" : ""}" type="button" data-qfilter="all">All (${state.passes.length})</button>
+            <button class="pill-btn ${queueFilter === "unsent" ? "active" : ""}" type="button" data-qfilter="unsent">Not Sent (${totalAll - sentCountAll})</button>
+            <button class="pill-btn ${queueFilter === "sent" ? "active" : ""}" type="button" data-qfilter="sent">Sent (${sentCountAll})</button>
+          </div>
+
+          ${p ? `
+            <!-- Current Recipient Card -->
+            <div class="current-recipient-card">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+                <span style="font-size:11px;color:#94A3B8;font-weight:700">Recipient ${curIdx + 1} of ${list.length}</span>
+                ${isAlreadySent 
+                  ? `<span class="sent-status-badge sent-status-sent">✓ Sent at ${esc(sentTimeStr)}</span>`
+                  : `<span class="sent-status-badge sent-status-unsent">⏳ Not sent</span>`}
+              </div>
+              <h2 style="font-size:24px;color:#F8FAFC;margin:4px 0">${esc(p.name)}</h2>
+              <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin:6px 0 14px">
+                <span class="mini-tier ${tier.cssClass}" style="margin:0">${tier.icon} ${tier.shortLabel}</span>
+                <span style="font-size:13px;color:#94A3B8;font-family:monospace">${esc(p.contact || "No contact info")}</span>
+              </div>
+
+              <!-- Primary Action Button -->
+              <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:12px">
+                ${sendAction ? `
+                  <a class="btn-primary compact" id="dispatchBtn" href="${esc(sendAction.href)}" target="_blank" rel="noopener" style="margin:0">
+                    <span class="tix">${sendAction.icon}</span>
+                    <span class="label">${isAlreadySent ? `Send Again on ${sendAction.label.split(" ")[2] || sendAction.label}` : sendAction.label}</span>
+                    <span class="arrow">${I.arrow}</span>
+                  </a>
+                ` : `
+                  <button class="btn small" type="button" disabled style="opacity:0.6">No phone or email to send</button>
+                `}
+                <button class="btn small" type="button" id="copyCurrentLink">${I.copy}Copy Link</button>
+              </div>
+
+              <!-- Stepper Navigation -->
+              <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08)">
+                <button class="btn small" type="button" id="prevRecip" ${curIdx === 0 ? "disabled" : ""}>${I.back}Previous</button>
+                <div style="display:flex;gap:6px">
+                  <button class="btn small" type="button" id="skipRecip">Skip</button>
+                  <button class="btn small primary" type="button" id="nextRecip" style="background:#0284C7;color:#fff">${curIdx === list.length - 1 ? "Finish" : "Next Attendee ➔"}</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Message Template Editor & Live Preview -->
+            <details class="template-editor-box">
+              <summary style="cursor:pointer;font-size:12px;color:#38BDF8;font-weight:700;display:flex;align-items:center;gap:6px">
+                <span>✏️</span>
+                <span>Customize Message Template & Variables</span>
+              </summary>
+              <div style="margin-top:10px">
+                <textarea class="textarea" id="tplEditor" style="min-height:90px;font-size:12px;font-family:monospace">${esc(tpl)}</textarea>
+                <div class="template-var-chips">
+                  <span style="font-size:11px;color:#64748B;align-self:center">Insert:</span>
+                  <span class="var-chip" data-var="{name}">{name}</span>
+                  <span class="var-chip" data-var="{event}">{event}</span>
+                  <span class="var-chip" data-var="{tier}">{tier}</span>
+                  <span class="var-chip" data-var="{link}">{link}</span>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                  <button class="btn small" type="button" id="saveTplBtn">Save Template</button>
+                  <button class="btn small" type="button" id="resetTplBtn">Reset</button>
+                </div>
+              </div>
+            </details>
+          ` : `
+            <div style="text-align:center;padding:32px 16px;background:rgba(255,255,255,0.02);border-radius:14px">
+              <div style="font-size:36px;margin-bottom:8px">🎉</div>
+              <h4 style="color:#F8FAFC;margin:0 0 6px">No attendees in this filter</h4>
+              <p style="font-size:13px;color:#94A3B8;margin:0 0 14px">All passes in this filter have been handled.</p>
+              <button class="btn small" type="button" id="viewAllInQueue">Show All Passes</button>
+            </div>
+          `}
+
+          <!-- Secondary Actions -->
+          <div style="display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08)">
+            <button class="btn small" type="button" id="qCopyAllLinks">${I.copy}Copy All Links</button>
+            <button class="btn small" type="button" id="qExportCsv">${I.download}Export CSV (with message text)</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Event Bindings
+    overlay.querySelector("#closeQueueModal").onclick = () => {
+      overlay.remove();
+      renderPassTools(state);
+      renderList(state);
+    };
+
+    overlay.querySelectorAll("button[data-qfilter]").forEach(b => {
+      b.onclick = () => {
+        queueFilter = b.dataset.qfilter;
+        curIdx = 0;
+        renderQueueModal();
+      };
+    });
+
+    overlay.querySelector("#viewAllInQueue")?.addEventListener("click", () => {
+      queueFilter = "all";
+      curIdx = 0;
+      renderQueueModal();
+    });
+
+    if (p) {
+      overlay.querySelector("#dispatchBtn")?.addEventListener("click", () => {
+        markPassSent(p.id);
+        toast(`Pass marked sent to ${p.name}`);
+        setTimeout(() => {
+          if (curIdx < list.length - 1) {
+            curIdx++;
+            renderQueueModal();
+          } else {
+            renderQueueModal();
+          }
+        }, 300);
+      });
+
+      overlay.querySelector("#copyCurrentLink")?.addEventListener("click", async () => {
+        (await copyText(passUrl(p.token))) ? toast(`Copied link for ${p.name}`) : toast("Couldn't copy", "x");
+      });
+
+      overlay.querySelector("#prevRecip")?.addEventListener("click", () => {
+        if (curIdx > 0) { curIdx--; renderQueueModal(); }
+      });
+
+      overlay.querySelector("#skipRecip")?.addEventListener("click", () => {
+        if (curIdx < list.length - 1) { curIdx++; renderQueueModal(); }
+        else toast("Reached the end of queue");
+      });
+
+      overlay.querySelector("#nextRecip")?.addEventListener("click", () => {
+        if (curIdx < list.length - 1) { curIdx++; renderQueueModal(); }
+        else {
+          toast("Finished going through queue!");
+          overlay.remove();
+          renderPassTools(state);
+          renderList(state);
+        }
+      });
+
+      const tplEditor = overlay.querySelector("#tplEditor");
+      overlay.querySelectorAll(".var-chip").forEach(c => {
+        c.onclick = () => {
+          if (tplEditor) {
+            tplEditor.value += c.dataset.var;
+            tpl = tplEditor.value;
+          }
+        };
+      });
+
+      overlay.querySelector("#saveTplBtn")?.addEventListener("click", () => {
+        if (tplEditor) {
+          tpl = tplEditor.value;
+          saveTemplate(tpl);
+          toast("Message template saved!");
+          renderQueueModal();
+        }
+      });
+
+      overlay.querySelector("#resetTplBtn")?.addEventListener("click", () => {
+        tpl = DEFAULT_MSG_TEMPLATE;
+        saveTemplate(tpl);
+        toast("Reset to default template");
+        renderQueueModal();
+      });
+    }
+
+    overlay.querySelector("#qCopyAllLinks")?.addEventListener("click", async () => {
+      const text = state.passes.map((p) => `${p.name}: ${passUrl(p.token)}`).join("\n");
+      (await copyText(text)) ? toast(`${plural(state.passes.length, "link")} copied`) : toast("Couldn't copy", "x");
+    });
+
+    overlay.querySelector("#qExportCsv")?.addEventListener("click", () => {
+      const currentTpl = getSavedTemplate();
+      const rows = [["name", "contact", "tier", "pass_link", "sent_status", "message_text"]].concat(state.passes.map((p) => {
+        const s = getSentStatus(p.id);
+        const tr = getTier(p);
+        const msg = formatTpl(currentTpl, state, p);
+        return [p.name, p.contact, tr.shortLabel, passUrl(p.token), s ? s.toISOString() : "Not sent", msg];
+      }));
+      const slug = state.ev.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "event";
+      download(`${slug}-passes-messages.csv`, toCsv(rows));
+    });
+  }
+
+  document.body.appendChild(overlay);
+  renderQueueModal();
+}
+
 function msgFor(state, p) {
   const ev = state.ev;
   const first = p.name.split(" ")[0];
@@ -1121,33 +1560,71 @@ function renderPassTools(state) {
   const inCount = state.first.size;
   const outCount = Math.max(0, total - inCount);
 
+  // Calculate live tier counts for filter pills
+  let vipC = 0, bkC = 0, volC = 0, stdC = 0;
+  for (const p of state.passes) {
+    const tr = getTier(p);
+    if (tr.id === "vip") vipC++;
+    else if (tr.id === "backstage") bkC++;
+    else if (tr.id === "volunteer") volC++;
+    else stdC++;
+  }
+
   view.querySelector("#pcount").innerHTML = total ? `<span class="sync-pulse" title="1-sec live sync"></span> ${plural(total, "pass", "passes")}` : "";
   if (!total) {
     el.innerHTML = `<div class="empty"><h3>No passes yet</h3><p class="sub" style="color:var(--blue)">Upload the registrations sheet and each row becomes a pass with its own link.</p></div>`;
     return;
   }
   el.innerHTML = `
-    <div class="tools">
+    <!-- Bulk Send Pass Hero Row -->
+    <div style="background:linear-gradient(135deg,rgba(56,189,248,0.12),rgba(129,140,248,0.12));border:1px solid rgba(56,189,248,0.3);border-radius:14px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <strong style="color:#F8FAFC;font-size:14px">Bulk Pass Dispatch</strong>
+        <div style="font-size:12px;color:#94A3B8">Send tickets via WhatsApp & Email in a step-by-step queue</div>
+      </div>
+      <button class="btn-primary compact" type="button" id="sendAllBtn" style="margin:0">
+        <span class="tix">${I.chat}</span>
+        <span class="label">Send all passes</span>
+        <span class="arrow">${I.arrow}</span>
+      </button>
+    </div>
+
+    <div class="tools" style="margin-top:4px">
       <button class="btn small" type="button" id="cpAll">${I.copy}Copy all links</button>
       <button class="btn small" type="button" id="csv">${I.download}Export CSV</button>
     </div>
+
     <div class="pass-filters-wrap">
       <div class="search">
         <span>${I.search}</span>
         <input class="input" id="filter" placeholder="Search attendee name or contact" autocomplete="off" value="${esc(state.filter)}">
       </div>
+      
+      <!-- Status Pills: All / Checked in / Not in -->
       <div class="filter-pills-row">
         <div class="status-pills" id="statusPills" role="tablist" aria-label="Pass status filter">
           <button type="button" class="pill-btn ${state.filterStatus === "all" ? "active" : ""}" data-status="all">All <span class="pill-badge">${total}</span></button>
-          <button type="button" class="pill-btn pill-in ${state.filterStatus === "in" ? "active" : ""}" data-status="in">Check-in <span class="pill-badge">${inCount}</span></button>
-          <button type="button" class="pill-btn pill-out ${state.filterStatus === "out" ? "active" : ""}" data-status="out">Check-out <span class="pill-badge">${outCount}</span></button>
+          <button type="button" class="pill-btn pill-in ${state.filterStatus === "in" ? "active" : ""}" data-status="in">Checked in <span class="pill-badge">${inCount}</span></button>
+          <button type="button" class="pill-btn pill-out ${state.filterStatus === "out" ? "active" : ""}" data-status="out">Not in <span class="pill-badge">${outCount}</span></button>
         </div>
+
         <div class="page-size-pills" id="sizePills" aria-label="Items per page">
           <span style="font-size:11px;color:#64748B;font-weight:600;padding-left:4px">Show:</span>
           <button type="button" class="pill-btn ${state.pageSize === 10 ? "active" : ""}" data-size="10">10</button>
           <button type="button" class="pill-btn ${state.pageSize === 20 ? "active" : ""}" data-size="20">20</button>
           <button type="button" class="pill-btn ${state.pageSize === 30 ? "active" : ""}" data-size="30">30</button>
           <button type="button" class="pill-btn ${state.pageSize === 9999 ? "active" : ""}" data-size="9999">All</button>
+        </div>
+      </div>
+
+      <!-- Tier Pills: All / VIP / Backstage / Volunteer / Standard -->
+      <div class="filter-pills-row" style="margin-top:6px">
+        <div class="status-pills" id="tierPills" role="tablist" aria-label="Tier filter">
+          <button type="button" class="pill-btn ${(!state.filterTier || state.filterTier === "all") ? "active" : ""}" data-tier="all">All Tiers <span class="pill-badge">${total}</span></button>
+          <button type="button" class="pill-btn ${state.filterTier === "vip" ? "active" : ""}" data-tier="vip" style="border-color:rgba(251,191,36,0.3)">⭐ VIP <span class="pill-badge">${vipC}</span></button>
+          <button type="button" class="pill-btn ${state.filterTier === "backstage" ? "active" : ""}" data-tier="backstage" style="border-color:rgba(192,132,252,0.3)">⚡ Backstage <span class="pill-badge">${bkC}</span></button>
+          <button type="button" class="pill-btn ${state.filterTier === "volunteer" ? "active" : ""}" data-tier="volunteer" style="border-color:rgba(52,211,153,0.3)">🤝 Volunteer <span class="pill-badge">${volC}</span></button>
+          <button type="button" class="pill-btn ${state.filterTier === "standard" ? "active" : ""}" data-tier="standard" style="border-color:rgba(148,163,184,0.3)">🎟️ Standard <span class="pill-badge">${stdC}</span></button>
         </div>
       </div>
     </div>`;
@@ -1192,6 +1669,19 @@ function renderPassTools(state) {
     renderPassTools(state);
     renderList(state);
   });
+
+  el.querySelector("#tierPills")?.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-tier]");
+    if (!btn) return;
+    state.filterTier = btn.dataset.tier;
+    state.shown = state.pageSize;
+    renderPassTools(state);
+    renderList(state);
+  });
+
+  el.querySelector("#sendAllBtn")?.addEventListener("click", () => {
+    openSendQueue(state);
+  });
 }
 
 function rowHtml(state, p) {
@@ -1199,6 +1689,12 @@ function rowHtml(state, p) {
   const send = sendHref(state, p);
   const tier = getTier(p);
   const curTier = p.tier || (tier.shortLabel === "VIP" ? "VIP" : tier.shortLabel === "VOLUNTEER" ? "Volunteer" : tier.shortLabel === "BACKSTAGE" ? "Backstage" : "Standard");
+  
+  const sentTime = getSentStatus(p.id);
+  const sentBadge = sentTime 
+    ? `<span class="sent-status-badge sent-status-sent" title="Dispatched at ${esc(fmtTime(sentTime))}">✓ Sent ${esc(fmtTime(sentTime))}</span>` 
+    : `<span class="sent-status-badge sent-status-unsent">Not sent</span>`;
+
   return `
     <li data-id="${p.id}">
       <p class="pl-name">
@@ -1209,10 +1705,11 @@ function rowHtml(state, p) {
           <option value="Volunteer" ${curTier === "Volunteer" ? "selected" : ""}>🤝 Volunteer</option>
           <option value="Backstage" ${curTier === "Backstage" ? "selected" : ""}>⚡ Backstage</option>
         </select>
+        ${sentBadge}
       </p>
-      <p class="pl-meta">${s ? `<span class="in">✓ In ${esc(fmtTime(s.scanned_at))} · ${esc(s.gate)}</span> · ` : `<span style="color:#64748B">Not checked in</span> · `}${esc(p.contact || "no contact")}</p>
+      <p class="pl-meta">${s ? `<span class="in">✓ In ${esc(fmtTime(s.scanned_at))} · ${esc(s.gate || "Gate 1")}</span> · ` : `<span style="color:#64748B">Not in</span> · `}<span style="font-family:monospace">${esc(maskContact(p.contact))}</span></p>
       <div class="pl-actions">
-        ${send && send.label === "Email" ? `<button class="icon-btn" type="button" data-preview-mail="${p.id}" aria-label="Preview and send email" title="Preview email">${send.icon}</button>` : (send ? `<a class="icon-btn" href="${esc(send.href)}" target="_blank" rel="noopener" aria-label="${send.label} ${esc(p.name)} their pass" title="${send.label}">${send.icon}</a>` : "")}
+        ${send && send.label === "Email" ? `<button class="icon-btn" type="button" data-preview-mail="${p.id}" aria-label="Preview and send email" title="Preview email">${send.icon}</button>` : (send ? `<a class="icon-btn" href="${esc(send.href)}" target="_blank" rel="noopener" data-mark-sent="${p.id}" aria-label="${send.label} ${esc(p.name)} their pass" title="${send.label}">${send.icon}</a>` : "")}
         <button class="icon-btn" type="button" data-copy="${esc(p.token)}" aria-label="Copy ${esc(p.name)}'s pass link" title="Copy link">${I.copy}</button>
         <a class="icon-btn" href="${esc(passUrl(p.token))}" target="_blank" rel="noopener" aria-label="Open ${esc(p.name)}'s pass" title="Open pass">${I.open}</a>
       </div>
@@ -1228,11 +1725,19 @@ function renderList(state) {
   if (f) {
     list = list.filter((p) => p.name.toLowerCase().includes(f) || (p.contact || "").toLowerCase().includes(f));
   }
-  // Apply Check-in / Check-out status filter
+  // Apply Check-in / Not in status filter
   if (state.filterStatus === "in") {
     list = list.filter((p) => state.first.has(p.id));
   } else if (state.filterStatus === "out") {
     list = list.filter((p) => !state.first.has(p.id));
+  }
+
+  // Apply Tier filter
+  if (state.filterTier && state.filterTier !== "all") {
+    list = list.filter((p) => {
+      const tr = getTier(p);
+      return tr.id === state.filterTier;
+    });
   }
 
   const visible = list.slice(0, state.shown);
@@ -1248,6 +1753,14 @@ function renderList(state) {
   });
 
   ul.onclick = async (e) => {
+    const markSentBtn = e.target.closest("[data-mark-sent]");
+    if (markSentBtn) {
+      const pId = markSentBtn.dataset.markSent;
+      markPassSent(pId);
+      const li = ul.querySelector(`li[data-id="${pId}"]`);
+      const p = state.passes.find(x => x.id === pId);
+      if (li && p) li.outerHTML = rowHtml(state, p);
+    }
     const mailBtn = e.target.closest("[data-preview-mail]");
     if (mailBtn) {
       const p = state.passes.find(x => x.id === mailBtn.dataset.previewMail);
