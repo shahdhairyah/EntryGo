@@ -7,3 +7,5 @@ git branch -M main
 git push -u origin main
 
 for vip , Backstage and other not included a STANDARD that other way not possible in answer ma reply give me in words ma mainly
+
+i needed a best and high level ui/ux desgin  needed in footer and haeder ma and email : entrygo@shahdhairyah.in improve that 
