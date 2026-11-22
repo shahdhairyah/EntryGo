@@ -1,5 +1,4 @@
--- GatePass: free QR entry passes for college club events.
--- https://github.com/Souradip121/gatepass
+-- GatePass: free QR entry passes for college club events
 --
 -- Run this whole file once in the Supabase SQL editor (Dashboard → SQL Editor → New query → paste → Run).
 -- It is idempotent: running it again changes nothing. Every object it creates is prefixed gp_,
@@ -78,8 +77,12 @@ create table if not exists public.gp_events (
   venue       text not null default '' check (char_length(venue) <= 120),
   art         smallint not null default 0 check (art between 0 and 9),
   gate_code   text not null unique default public.gp_new_code() check (gate_code ~ '^[A-HJKMNP-Z2-9]{8}$'),
+  qr_active   boolean not null default false,
+  qr_auto_hours numeric not null default 0,
   created_at  timestamptz not null default now()
 );
+alter table public.gp_events add column if not exists qr_active boolean not null default false;
+alter table public.gp_events add column if not exists qr_auto_hours numeric not null default 0;
 create index if not exists gp_events_owner_idx on public.gp_events (owner_id, starts_at desc);
 
 create table if not exists public.gp_passes (
@@ -164,9 +167,20 @@ set search_path = ''
 as $$
   select json_build_object(
     'name', p.name,
-    'event', json_build_object('name', e.name, 'club', e.club, 'starts_at', e.starts_at, 'venue', e.venue, 'art', e.art),
+    'event', json_build_object(
+      'id', e.id, 
+      'name', e.name, 
+      'club', e.club, 
+      'starts_at', e.starts_at, 
+      'venue', e.venue, 
+      'art', e.art, 
+      'qr_active', coalesce(e.qr_active, false),
+      'qr_auto_hours', coalesce(e.qr_auto_hours, 0)
+    ),
     'checked_in_at', s.scanned_at,
-    'gate', s.gate
+    'gate', s.gate,
+    'qr_active', coalesce(e.qr_active, false),
+    'qr_auto_hours', coalesce(e.qr_auto_hours, 0)
   )
   from public.gp_passes p
   join public.gp_events e on e.id = p.event_id

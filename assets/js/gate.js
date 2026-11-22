@@ -1,5 +1,5 @@
 // Gate scanner. Staff hold the event's gate code; every call is a code-checked RPC.
-import { configured, rpc, esc, typo, fmtTime, fmtCode, store, I, paintIcons, plural, PAUSED_MSG } from "./core.js";
+import { configured, rpc, esc, typo, fmtTime, fmtCode, store, I, paintIcons, plural, PAUSED_MSG, getTier } from "./core.js";
 import { Camera, decode, tokenFrom } from "./scanner.js";
 
 const $ = (id) => document.getElementById(id);
@@ -9,6 +9,8 @@ const S = {
   device: store.get("gp.device") || Math.random().toString(36).slice(2, 10),
   last: { token: null, seen: 0, text: null, textSeen: 0 },
   busy: false, statsTimer: null, loopOn: false,
+  soundOn: store.get("gp.sound") !== false,
+  vibrateOn: store.get("gp.vibrate") !== false,
 };
 store.set("gp.device", S.device);
 paintIcons();
@@ -21,7 +23,7 @@ let ac;
 function unlockAudio() { try { ac ||= new (window.AudioContext || window.webkitAudioContext)(); ac.resume?.(); } catch {} }
 document.addEventListener("pointerdown", unlockAudio, { once: true });
 function tone(freq, start, dur, type = "sine", gain = 0.2) {
-  if (!ac) return;
+  if (!S.soundOn || !ac) return;
   const o = ac.createOscillator(), g = ac.createGain();
   o.type = type; o.frequency.value = freq;
   g.gain.setValueAtTime(0.0001, ac.currentTime + start);
@@ -30,10 +32,15 @@ function tone(freq, start, dur, type = "sine", gain = 0.2) {
   o.connect(g).connect(ac.destination);
   o.start(ac.currentTime + start); o.stop(ac.currentTime + start + dur + 0.05);
 }
+function vibrate(pattern) {
+  if (S.vibrateOn && navigator.vibrate) {
+    try { navigator.vibrate(pattern); } catch {}
+  }
+}
 const sounds = {
-  ok() { tone(988, 0, 0.11, "sine", 0.25); tone(1480, 0.12, 0.16, "sine", 0.25); navigator.vibrate?.(70); },
-  dup() { tone(150, 0, 0.5, "sawtooth", 0.22); tone(155, 0, 0.5, "square", 0.08); navigator.vibrate?.([90, 60, 90, 60, 220]); },
-  warn() { tone(440, 0, 0.14, "triangle", 0.2); tone(330, 0.16, 0.2, "triangle", 0.2); navigator.vibrate?.([50, 40, 50]); },
+  ok() { tone(988, 0, 0.11, "sine", 0.25); tone(1480, 0.12, 0.16, "sine", 0.25); vibrate(70); },
+  dup() { tone(150, 0, 0.5, "sawtooth", 0.22); tone(155, 0, 0.5, "square", 0.08); vibrate([90, 60, 90, 60, 220]); },
+  warn() { tone(440, 0, 0.14, "triangle", 0.2); tone(330, 0.16, 0.2, "triangle", 0.2); vibrate([50, 40, 50]); },
 };
 
 // ── verdict ──
@@ -70,15 +77,25 @@ function setCounts(c) {
 function showResult(r) {
   if (!r) return;
   setCounts(r.counts);
+  const tier = getTier(r.name, r.contact || "");
   switch (r.status) {
     case "ok":
       flash("ok"); sounds.ok();
-      verdict("ok", `${esc(r.name)} <span class="sep">· First scan</span>`, `Let them in · ${esc(fmtTime(r.scanned_at))}`);
+      verdict("ok", `
+        <div class="verdict-tier-row">
+          <span class="scan-tier-banner ${tier.cssClass}">${tier.icon} ${tier.shortLabel}</span>
+          <span class="v-attendee-name">${esc(r.name)}</span>
+        </div>
+      `, `<span class="admit-tag">ADMIT ATTENDEE</span> · First scan at ${esc(fmtTime(r.scanned_at))}`);
       break;
     case "dup":
       flash("dup"); sounds.dup();
-      verdict("dup", `Already scanned at ${esc(fmtTime(r.first_at))}`,
-        `${esc(r.name)} · first scan at ${esc(r.first_gate)}${r.same_device ? " (this phone)" : ""} · ${plural(r.repeats, "repeat")}`);
+      verdict("dup", `
+        <div class="verdict-tier-row">
+          <span class="scan-tier-banner ${tier.cssClass}">${tier.icon} ${tier.shortLabel}</span>
+          <span>Already scanned at ${esc(fmtTime(r.first_at))}</span>
+        </div>
+      `, `${esc(r.name)} · first scan at ${esc(r.first_gate)}${r.same_device ? " (this phone)" : ""} · ${plural(r.repeats, "repeat")}`);
       break;
     case "wrong_event":
       sounds.warn(); verdict("warn", "Pass for another event", "This QR is an EntryGo pass, but not for this event. Don't let them in on it.");
@@ -132,12 +149,15 @@ async function loadStats() {
     const st = await rpc("gp_gate_stats", { p_code: S.code });
     if (!st) return leave("The organiser changed this gate's code. Ask them for the new one.");
     setCounts(st.counts);
-    $("recent").innerHTML = st.recent.length ? st.recent.map((r) => `
+    $("recent").innerHTML = st.recent.length ? st.recent.map((r) => {
+      const tier = getTier(r.name);
+      return `
       <li>
         <span class="${r.is_first ? "r-ok" : "r-dup"}">${r.is_first ? I.check : I.x}</span>
-        <span class="r-name">${esc(r.name)}</span>
-        <span class="r-at">${r.is_first ? "" : "repeat · "}${esc(r.gate)} · ${esc(fmtTime(r.scanned_at))}</span>
-      </li>`).join("") : `<li><span class="r-at">Nobody scanned yet.</span></li>`;
+        <span class="r-name">${esc(r.name)} <span class="mini-tier ${tier.cssClass}">${tier.shortLabel}</span></span>
+        <span class="r-at">${r.is_first ? "" : "repeat · "}${esc(r.gate || "Gate")} · ${esc(fmtTime(r.scanned_at))}</span>
+      </li>`;
+    }).join("") : `<li><span class="r-at">Nobody scanned yet.</span></li>`;
   } catch {}
 }
 
@@ -166,9 +186,25 @@ async function startCamera() {
 }
 function renderCamTools() {
   const t = $("camTools");
-  t.innerHTML = `${cam.canTorch ? `<button class="icon-btn" type="button" id="torch" aria-pressed="false" aria-label="Torch">${I.torch}</button>` : ""}${cam.canFlip ? `<button class="icon-btn" type="button" id="flip" aria-label="Switch camera">${I.flip}</button>` : ""}`;
+  const torchBtn = cam.canTorch ? `<button class="icon-btn" type="button" id="torch" aria-pressed="false" aria-label="Torch">${I.torch}</button>` : "";
+  const flipBtn = cam.canFlip ? `<button class="icon-btn" type="button" id="flip" aria-label="Switch camera">${I.flip}</button>` : "";
+  const soundBtn = `<button class="icon-btn ${S.soundOn ? "tool-active" : "tool-muted"}" type="button" id="toggleSound" aria-label="Toggle Sound feedback" title="${S.soundOn ? "Sound On (Tap to mute)" : "Sound Muted (Tap to unmute)"}">${S.soundOn ? I.volume : I.volumeMute}</button>`;
+  const vibBtn = `<button class="icon-btn ${S.vibrateOn ? "tool-active" : "tool-muted"}" type="button" id="toggleVib" aria-label="Toggle Vibration feedback" title="${S.vibrateOn ? "Vibration On" : "Vibration Off"}">${S.vibrateOn ? I.vibrate : I.vibrateOff}</button>`;
+
+  t.innerHTML = `${torchBtn}${flipBtn}${soundBtn}${vibBtn}`;
   t.querySelector("#torch")?.addEventListener("click", async (e) => { const on = await cam.torch(); e.currentTarget.setAttribute("aria-pressed", String(on)); });
   t.querySelector("#flip")?.addEventListener("click", async () => { await cam.flip(); renderCamTools(); });
+  t.querySelector("#toggleSound")?.addEventListener("click", () => {
+    S.soundOn = !S.soundOn;
+    store.set("gp.sound", S.soundOn);
+    renderCamTools();
+  });
+  t.querySelector("#toggleVib")?.addEventListener("click", () => {
+    S.vibrateOn = !S.vibrateOn;
+    store.set("gp.vibrate", S.vibrateOn);
+    if (S.vibrateOn) vibrate(60);
+    renderCamTools();
+  });
 }
 async function loop() {
   if (S.loopOn) return;
@@ -252,13 +288,22 @@ function showJoin(msg = "") {
   scanEl.hidden = true; joinEl.hidden = false;
   const err = $("joinErr");
   err.textContent = msg; err.hidden = !msg;
+  if (!msg && codeIn) {
+    codeIn.focus();
+  }
 }
 function leave(msg = "") {
   cam.stop(); clearInterval(S.statsTimer);
   S.code = null; store.del("gp.gate");
+  if (location.hash) {
+    history.replaceState(null, "", location.pathname);
+  }
   showJoin(msg);
 }
-$("leaveBtn").addEventListener("click", () => leave());
+$("leaveBtn").addEventListener("click", (e) => {
+  e.preventDefault();
+  leave();
+});
 
 function showScanner() {
   joinEl.hidden = true; scanEl.hidden = false;

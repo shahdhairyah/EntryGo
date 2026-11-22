@@ -126,6 +126,7 @@ export const localBackend = {
     const ev = this.getEvent(p.event_id);
     const scans = getStorage(STORAGE_KEY_SCANS, []).filter(s => s.pass_id === p.id && s.accepted);
     const firstScan = scans[0];
+    
     return {
       id: p.id,
       name: p.name,

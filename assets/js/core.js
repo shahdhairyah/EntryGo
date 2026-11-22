@@ -169,7 +169,62 @@ export function qrSvg(text, { fg = "#1A43B4", margin = 2, label = "QR code", gho
   }
   // ghost = a second riso plate a hair off register (light enough that scanners binarise it away)
   const g = ghost ? `<path fill="${ghost}" opacity=".5" transform="translate(.24 .17)" d="${d}"/>` : "";
+
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-label="${esc(label)}">${g}<path fill="${fg}" d="${d}"/></svg>`;
+}
+
+// ── attendee tier classification (VIP, Backstage, Standard) ──
+export function getTier(passOrName, extraContact = "") {
+  let name = "";
+  let contact = "";
+  let customTier = "";
+  if (typeof passOrName === "object" && passOrName !== null) {
+    name = passOrName.name || "";
+    contact = passOrName.contact || "";
+    customTier = passOrName.tier || "";
+  } else {
+    name = String(passOrName || "");
+    contact = String(extraContact || "");
+  }
+
+  const combined = `${customTier} ${name} ${contact}`.toLowerCase();
+
+  // 1. VIP Tier: VIP, V.I.P, Gold, Patron, Sponsor, Celebrity, VVIP
+  if (/\b(vip|vvip|v\.i\.p|gold|patron|sponsor|celebrity)\b/i.test(combined)) {
+    return {
+      id: "vip",
+      label: "VIP PASS",
+      shortLabel: "VIP",
+      icon: "⭐",
+      cssClass: "tier-vip",
+      badgeHtml: `<span class="tier-badge tier-vip"><span class="tier-icon">⭐</span> VIP PASS</span>`,
+      chipHtml: `<span class="tier-chip tier-vip">⭐ VIP</span>`
+    };
+  }
+
+  // 2. Backstage Tier: Backstage, Crew, Staff, Artist, Speaker, Organizer, Volunteer, Media
+  if (/\b(backstage|crew|staff|artist|speaker|organizer|volunteer|media|all[\s_-]?access)\b/i.test(combined)) {
+    return {
+      id: "backstage",
+      label: "BACKSTAGE CREW",
+      shortLabel: "BACKSTAGE",
+      icon: "⚡",
+      cssClass: "tier-backstage",
+      badgeHtml: `<span class="tier-badge tier-backstage"><span class="tier-icon">⚡</span> BACKSTAGE</span>`,
+      chipHtml: `<span class="tier-chip tier-backstage">⚡ STAFF</span>`
+    };
+  }
+
+  // 3. Standard / General Admission Tier
+  return {
+    id: "standard",
+    label: "STANDARD PASS",
+    shortLabel: "STANDARD",
+    icon: "🎟️",
+    cssClass: "tier-standard",
+    badgeHtml: `<span class="tier-badge tier-standard"><span class="tier-icon">🎟️</span> STANDARD</span>`,
+    chipHtml: `<span class="tier-chip tier-standard">STANDARD</span>`
+  };
 }
 
 // ── icons: utility glyphs share a 2.4 stroke; the comp's signature marks are filled ──
@@ -182,6 +237,11 @@ export const I = {
   x: s('<path d="M6 6l12 12M18 6 6 18"/>'),
   copy: s('<rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/>'),
   download: s('<path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14"/>'),
+  volume: s('<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>'),
+  volumeMute: s('<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>'),
+  vibrate: s('<path d="M2 8v8M22 8v8M5 5v14M19 5v14M9 4h6a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/>'),
+  vibrateOff: s('<path d="M2 8v8M22 8v8M9 4h6a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><line x1="2" y1="2" x2="22" y2="22"/>'),
+  clock: s('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'),
   link: s('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'),
   open: s('<path d="M14 4.5h5.5V10M19.5 4.5 11 13M18 14v4.5a1 1 0 0 1-1 1H5.5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1H10"/>'),
   chat: s('<path d="M20 11.6a8 8 0 0 1-11.9 7l-4.6 1.3 1.3-4.4A8 8 0 1 1 20 11.6z"/><path d="M9 9.2c.2 2.6 2.7 5.2 5.6 5.6l1.2-1.4-1.8-.9-.8.8c-1-.4-1.9-1.3-2.4-2.3l.8-.8-.8-1.8L9 9.2z" stroke-width="1.6"/>'),

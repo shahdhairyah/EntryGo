@@ -1,5 +1,5 @@
 // The attendee's pass. Public at /p/#<token>; reads only its own pass through gp_pass().
-import { configured, rpc, esc, escT, typo, fmtWhen, fmtTime, qrSvg, setArt, passUrl, copyText, toast, I, ROOT, PAUSED_MSG } from "./core.js";
+import { configured, rpc, esc, escT, typo, fmtWhen, fmtTime, qrSvg, setArt, passUrl, copyText, toast, I, ROOT, PAUSED_MSG, getTier } from "./core.js";
 
 const view = document.getElementById("view");
 const token = decodeURIComponent((location.hash || "").replace(/^#\/?/, "")).trim();
@@ -33,33 +33,41 @@ function render(p) {
   const ev = p.event;
   document.title = `${p.name} · ${typo(ev.name)} · EntryGo`;
   const used = !!p.checked_in_at;
+  const tier = getTier(p);
+
   view.innerHTML = `
     <div class="ticket-wrap">
-      <article class="ticket ${used ? "used" : ""}" aria-label="Entry pass for ${esc(p.name)}">
-        <div class="ticket-badge">
+      <article class="ticket ${used ? "used" : ""} ticket-${tier.id}" aria-label="Entry pass for ${esc(p.name)}">
+        <div class="ticket-badge ${tier.cssClass}">
           <span class="dot"></span>
+          <span class="badge-tier-tag">${tier.icon} ${tier.shortLabel}</span>
+          <span class="badge-status-sep">·</span>
           <span>${used ? "USED" : "ACTIVE PASS"}</span>
         </div>
         <div class="t-art" role="img" aria-label=""></div>
         <div class="t-body">
+          <div class="t-tier-pill ${tier.cssClass}">
+            <span class="tier-pill-icon">${tier.icon}</span>
+            <span class="tier-pill-label">${tier.label}</span>
+          </div>
           <h1 class="t-name ink">${esc(p.name)}</h1>
           <div class="t-rule inked"></div>
           <p class="t-event ink">${escT(ev.name)}</p>
           <p class="t-when">${esc(fmtWhen(ev.starts_at))}</p>
           ${ev.venue ? `<p class="t-where">${esc(ev.venue)}</p>` : ""}
         </div>
-        <div class="t-qr">
+        <div class="t-qr" id="qrContainer">
           ${qrSvg(passUrl(token), { label: `Entry QR for ${p.name}`, ghost: "#FF2FA2" })}
           ${used ? `<div class="t-stamp"><div class="inked">Checked in<small>${esc(fmtTime(p.checked_in_at))} · ${esc(p.gate)}</small></div></div>` : ""}
         </div>
         <div class="t-tear" aria-hidden="true"></div>
-        <div class="t-stub ink">${used ? "Already used" : "Show this at the gate"}</div>
+        <div class="t-stub ink">${used ? "Already used" : `Show this at the gate · ${tier.shortLabel}`}</div>
       </article>
     </div>
     <div class="pass-notes">
       <p class="fine">${used
         ? "This pass let someone in already. If that wasn't you, find the organiser at the gate."
-        : "Turn your brightness up at the gate. A screenshot works too, but only once: the first scan lets you in."}</p>
+        : "Turn your brightness up at the gate. A screenshot or saved PNG works too: first scan lets you in."}</p>
     </div>
     <div class="pass-actions">
       <button class="btn small" type="button" id="copy">${I.link}Copy pass link</button>

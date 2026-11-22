@@ -1,17 +1,18 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Gate Scanner · EntryGo</title>
-<meta name="description" content="Turn this phone into the gate scanner for a EntryGo event.">
-<meta name="theme-color" content="#090D16">
-<meta name="referrer" content="no-referrer">
-<link rel="icon" href="../assets/img/icon.svg" type="image/svg+xml">
-<link rel="preload" href="../assets/fonts/oswald-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="../assets/css/gatepass.css">
-<script defer src="../config.js"></script>
-<script type="module" src="../assets/js/gate.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Gate Scanner · EntryGo</title>
+  <meta name="description" content="Turn any mobile device into a high-speed, cryptographic QR gate scanner. Zero app downloads.">
+  <meta name="theme-color" content="#090D16">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="../assets/img/icon.svg" type="image/svg+xml">
+  <link rel="preload" href="../assets/fonts/oswald-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../assets/css/gatepass.css">
+  <script defer src="../config.js"></script>
+  <script type="module" src="../assets/js/gate.js"></script>
 
   <link rel="manifest" href="../manifest.json">
   <script>
@@ -21,97 +22,125 @@
       });
     }
   </script>
-
 </head>
-<body>
-<!--
-EntryGo Gate Scanner: Optical camera HUD with real-time audio haptic feedback and atomic fraud locks.
--->
-<main class="app">
-  <header class="mast">
-    <div class="brand-group">
-      <a class="logo ink" href="../">Entry Go</a>
-      <a class="brand-by" href="https://www.shahdhairyah.in/" target="_blank" rel="noopener">By Shah Dhairya</a>
-    </div>
-    <span class="mast-role quiet">Gate Scanner</span>
-  </header>
 
-  <!-- join -->
-  <section id="join" class="stack" hidden>
-    <h1 class="head">Join a gate</h1>
-    <p class="sub">Type the event's gate code from the organiser. No account needed.</p>
-    <form id="joinForm" class="stack" novalidate>
-      <label class="field">
-        <span>Gate code</span>
-        <input class="input code-input" id="code" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" maxlength="9" placeholder="••••-••••" aria-describedby="joinErr" required>
-      </label>
-      <fieldset class="field" style="border:0;margin:0;padding:0">
-        <span>This gate</span>
-        <div class="chips" id="gateChips">
-          <label class="chip"><input type="radio" name="gate" value="Gate 1" checked><span>Gate 1</span></label>
-          <label class="chip"><input type="radio" name="gate" value="Gate 2"><span>Gate 2</span></label>
-          <label class="chip"><input type="radio" name="gate" value="Gate 3"><span>Gate 3</span></label>
-          <label class="chip"><input type="radio" name="gate" value="Desk"><span>Desk</span></label>
+<body class="gate-portal">
+  <main class="app">
+    <!-- Cyber Masthead -->
+    <header class="mast">
+      <div class="brand-group">
+        <a class="brand-link" href="../" title="Return to Home">
+          <img class="brand-logo-img" src="../assets/img/logo.png" alt="EntryGo Logo">
+          <span class="logo ink">Entry Go</span>
+        </a>
+        <a class="brand-by" href="https://www.shahdhairyah.in/" target="_blank" rel="noopener">By Shah Dhairya</a>
+      </div>
+      <span class="mast-role">Gate Scanner</span>
+    </header>
+
+    <!-- Join Section (Redesigned Cyber Glass Console) -->
+    <section id="join" class="stack" hidden>
+      <div class="gate-hero-badge">
+        <span class="pulse-dot"></span>
+        <span>VOLUNTEER &amp; STAFF GATE ACCESS</span>
+      </div>
+
+      <div class="gate-title-wrap">
+        <h1 class="head">Join a Gate</h1>
+        <p class="sub">Enter the 8-character event code provided by the organizer. No account or password required.</p>
+      </div>
+
+      <form id="joinForm" class="stack" novalidate>
+        <label class="field">
+          <span class="field-label">Gate Access Code</span>
+          <div class="code-input-wrapper">
+            <input class="input code-input" id="code" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" maxlength="9" placeholder="••••-••••" aria-describedby="joinErr" required autofocus>
+          </div>
+        </label>
+
+        <fieldset class="field" style="border:0;margin:0;padding:0">
+          <span class="field-label">Select Gate Position</span>
+          <div class="chips" id="gateChips">
+            <label class="chip"><input type="radio" name="gate" value="Gate 1" checked><span>Gate 1</span></label>
+            <label class="chip"><input type="radio" name="gate" value="Gate 2"><span>Gate 2</span></label>
+            <label class="chip"><input type="radio" name="gate" value="Gate 3"><span>Gate 3</span></label>
+            <label class="chip"><input type="radio" name="gate" value="Desk"><span>Desk</span></label>
+          </div>
+        </fieldset>
+
+        <p class="err" id="joinErr" role="alert" hidden></p>
+
+        <button class="btn-primary compact" id="joinBtn" type="submit">
+          <span class="label">Open Optical Scanner</span>
+          <span class="arrow" data-i="arrow"></span>
+        </button>
+      </form>
+
+      <div class="join-portal-footer">
+        <p class="fine">Event Organizer? <a href="../">Sign in to manage passes</a>.</p>
+      </div>
+    </section>
+
+    <!-- Scanner HUD Section (Optical Camera Feed & Realtime Validation) -->
+    <section id="scan" hidden>
+      <div class="scan-head">
+        <div class="scan-info">
+          <p class="scan-event" id="evName"></p>
+          <span class="scan-gate" id="gateName"></span>
         </div>
-      </fieldset>
-      <p class="err" id="joinErr" role="alert" hidden></p>
-      <button class="btn-primary compact" id="joinBtn" type="submit"><span class="label">Open scanner</span><span class="arrow" data-i="arrow"></span></button>
-    </form>
-    <p class="fine">Organiser? <a href="../">Sign in to make passes</a>.</p>
-  </section>
-
-  <!-- scanner -->
-  <section id="scan" hidden>
-    <div class="scan-head">
-      <p class="scan-event" id="evName"></p>
-      <span class="scan-gate" id="gateName"></span>
-      <button class="leave" type="button" id="leaveBtn">Leave</button>
-    </div>
-    <div class="viewport" id="viewport">
-      <div class="hud-tag">
-        <span class="live-dot"></span>
-        <span>OPTICAL HUD ACTIVE</span>
+        <button class="leave" type="button" id="leaveBtn" title="Switch event or gate">Leave</button>
       </div>
-      <video id="video" playsinline muted></video>
-      <div class="brackets" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-      <div class="cam-tools">
-        <span id="camTools" style="display:contents"></span>
-        <button class="icon-btn" type="button" id="findBtn" aria-label="Find a guest by name" title="Find by name"></button>
-        <label class="icon-btn" title="Scan a photo of a pass"><input type="file" accept="image/*" id="photo" class="sr" aria-label="Scan a photo of a pass"><span id="photoLbl"></span></label>
+
+      <!-- Camera Optical HUD Viewport -->
+      <div class="viewport" id="viewport">
+        <div class="hud-tag">
+          <span class="live-dot"></span>
+          <span>OPTICAL HUD ACTIVE</span>
+        </div>
+        <video id="video" playsinline muted></video>
+        <div class="brackets" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+        <!-- Camera Controls HUD Bar -->
+        <div class="cam-tools">
+          <span id="camTools" style="display:contents"></span>
+          <button class="icon-btn" type="button" id="findBtn" aria-label="Find attendee by name" title="Find attendee by name"></button>
+          <label class="icon-btn" title="Upload or scan pass photo">
+            <input type="file" accept="image/*" id="photo" class="sr" aria-label="Upload pass photo">
+            <span id="photoLbl"></span>
+          </label>
+        </div>
+
+        <div class="cam-msg" id="camMsg"></div>
       </div>
-      <div class="cam-msg" id="camMsg"></div>
-    </div>
 
-    <div class="verdict idle" id="verdict" role="status" aria-live="assertive"></div>
+      <!-- Realtime Pass Verdict Banner -->
+      <div class="verdict idle" id="verdict" role="status" aria-live="assertive"></div>
 
-    <div class="counter" id="counter">
-      <span class="c-label">Checked in</span>
-      <span class="c-num" id="cNum">0 / 0</span>
-      <div class="bar"><i id="cBar"></i></div>
-    </div>
+      <!-- Realtime Event Check-in Statistics -->
+      <div class="counter" id="counter">
+        <div class="c-header">
+          <span class="c-label">Live Checked In</span>
+          <span class="c-num" id="cNum">0 / 0</span>
+        </div>
+        <div class="bar"><i id="cBar"></i></div>
+      </div>
 
-    <div class="gate-recent" style="margin-top:16px">
-      <h3 class="recent-title" style="font-size:14px;color:#94A3B8;margin-bottom:8px;font-family:var(--f-display);letter-spacing:0.04em">Recent Scans</h3>
-      <ul class="recent-list" id="recent"></ul>
-    </div>
-  </section>
+      <!-- Live Recent Scans Feed -->
+      <div class="gate-recent">
+        <h3 class="recent-title">Recent Gate Activity</h3>
+        <ul class="recent-list" id="recent"></ul>
+      </div>
+    </section>
 
-  <div id="flash" class="flash" aria-hidden="true"></div>
+    <!-- Scan Flash Feedback Overlay -->
+    <div id="flash" class="flash" aria-hidden="true"></div>
 
-  <!-- find by name modal -->
-  <dialog id="findDlg" class="dlg">
-    <div class="dlg-head">
-      <h3>Find attendee</h3>
-      <button class="icon-btn" type="button" id="closeFind" aria-label="Close">${I.x}</button>
-    </div>
-    <input class="input" type="search" id="findQ" placeholder="Type a name…" autocomplete="off">
-    <ul class="find-list" id="findList"></ul>
-  </dialog>
-
-  <footer class="foot">
-    <span class="foot-title">Entry Go</span>
-    <span class="foot-by">By <a href="https://www.shahdhairyah.in/" target="_blank" rel="noopener">Shah Dhairya</a></span>
-  </footer>
-</main>
+    <!-- Footer -->
+    <footer class="foot">
+      <span class="foot-title">Entry Go</span>
+      <span class="foot-by">By <a href="https://www.shahdhairyah.in/" target="_blank" rel="noopener">Shah Dhairya</a></span>
+    </footer>
+  </main>
 </body>
+
 </html>

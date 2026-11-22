@@ -32,14 +32,15 @@ const NAME_ANY = /name/i;
 const NAME_NOT = /college|club|team|institute|institution|school|university|event|father|mother|guardian|parent|user\s*name|file/i;
 const EMAIL_HDR = /e-?mail/i;
 const PHONE_HDR = /phone|mobile|whats\s*app|contact|number|cell/i;
+const TIER_HDR = /tier|category|type|pass\s*type|ticket\s*type|role|designation|access/i;
 
-// Work out which columns hold the name and the contact.
+// Work out which columns hold the name, contact, and optional tier.
 export function analyse(rows) {
   if (!rows.length) return null;
   const head = rows[0];
   const width = Math.max(...rows.slice(0, 50).map((r) => r.length));
   const looksLikeData = head.some((c) => isEmail(c) || isPhone(c));
-  const hasHeader = !looksLikeData && head.some((c) => NAME_ANY.test(c) || EMAIL_HDR.test(c) || PHONE_HDR.test(c));
+  const hasHeader = !looksLikeData && head.some((c) => NAME_ANY.test(c) || EMAIL_HDR.test(c) || PHONE_HDR.test(c) || TIER_HDR.test(c));
   const body = hasHeader ? rows.slice(1) : rows;
   const sample = body.slice(0, 200);
   const share = (col, test) => {
@@ -73,18 +74,30 @@ export function analyse(rows) {
   const email = best("email", EMAIL_HDR);
   // Indian clubs send passes on WhatsApp first, so prefer the phone column when there is one.
   const contact = phone >= 0 ? phone : email;
-  return { hasHeader, cols, name, contact, body };
+
+  let tier = -1;
+  if (hasHeader) {
+    tier = head.findIndex((h, i) => i !== name && i !== contact && TIER_HDR.test(h));
+  }
+  return { hasHeader, cols, name, contact, tier, body };
 }
 
 // Turn rows into passes; drop blanks and duplicates (also against people already on the list).
-export function toPasses(a, nameCol, contactCol, existing = []) {
+export function toPasses(a, nameCol, contactCol, existing = [], tierCol = -1, defaultTier = "Standard") {
   const seen = new Set(existing.map((p) => key(p.name, p.contact)));
   const out = [];
   let blank = 0, dup = 0;
   for (const r of a.body) {
-    const name = (r[nameCol] || "").replace(/\s+/g, " ").trim().slice(0, 120);
+    let name = (r[nameCol] || "").replace(/\s+/g, " ").trim().slice(0, 120);
     const contact = contactCol >= 0 ? (r[contactCol] || "").replace(/\s+/g, " ").trim().slice(0, 160) : "";
+    let tierVal = tierCol >= 0 ? (r[tierCol] || "").trim() : defaultTier;
     if (!name) { blank++; continue; }
+
+    // If tier is VIP / Backstage and not already in name, append cleanly
+    if (tierVal && tierVal !== "Standard" && !new RegExp(tierVal, "i").test(name)) {
+      name = `${name} (${tierVal})`;
+    }
+
     const k = key(name, contact);
     if (seen.has(k)) { dup++; continue; }
     seen.add(k);

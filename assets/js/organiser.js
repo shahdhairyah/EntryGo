@@ -125,7 +125,7 @@ function openMailPreview(state, p) {
 // Organiser app: sign in, events, registrations → passes, links, gate code, live counter.
 import {
   cfg, configured, ART, artUrl, passUrl, gateUrl, fmtCode, fmtWhen, fmtTime, fmtDay, esc, plural,
-  store, copyText, toast, download, qrSvg, I, paintIcons, PAUSED_MSG, escT, typo, localBackend
+  store, copyText, toast, download, qrSvg, I, paintIcons, PAUSED_MSG, escT, typo, localBackend, getTier
 } from "./core.js";
 import { parseTable, analyse, toPasses, toCsv, isEmail, isPhone } from "./csv.js";
 
@@ -644,32 +644,130 @@ function renderReg(state) {
         <span class="grow">${has ? "Add more registrations" : "Upload registrations.csv"}<small>Google Form export, or any sheet with a name column</small></span>
         <span class="chev">${I.chev}</span>
       </label>
-      <button class="btn small" type="button" id="pasteBtn" style="align-self:flex-start">${I.copy}Or paste rows from your sheet</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn small" type="button" id="pasteBtn">${I.copy}Paste rows</button>
+        <button class="btn small btn-glow-cyan" type="button" id="quickAddBtn" style="border-color:#38BDF8;color:#38BDF8">${I.plus}Add Single Pass (VIP / Standard)</button>
+      </div>
+
+      <!-- Quick Add Single Pass Form Modal / Drawer -->
+      <div id="quickAddBox" class="stack" style="background:rgba(15,23,42,0.85);border:1px solid rgba(56,189,248,0.3);padding:14px;border-radius:12px;margin-top:4px" hidden>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong style="color:#38BDF8;font-size:13px;letter-spacing:0.04em">⚡ QUICK PASS GENERATOR</strong>
+          <button class="icon-btn" type="button" id="closeQuickAdd" style="width:24px;height:24px">${I.x}</button>
+        </div>
+        <div class="two">
+          <label class="field">
+            <span>Attendee Name</span>
+            <input class="input" id="qaName" placeholder="e.g. Rahul Sharma" autocomplete="off">
+          </label>
+          <label class="field">
+            <span>Pass Tier / Category</span>
+            <select class="select" id="qaTier">
+              <option value="VIP">⭐ VIP PASS</option>
+              <option value="Backstage">⚡ BACKSTAGE STAFF</option>
+              <option value="Standard" selected>🎟️ STANDARD PASS</option>
+            </select>
+          </label>
+        </div>
+        <label class="field">
+          <span>Phone or Email (Optional)</span>
+          <input class="input" id="qaContact" placeholder="e.g. 9876543210 or name@gmail.com" autocomplete="off">
+        </label>
+        <button class="btn-primary compact" type="button" id="qaSubmit">
+          <span class="tix">${I.ticket}</span>
+          <span class="label">Generate Pass Immediately</span>
+        </button>
+      </div>
+
       <div id="pasteBox" class="stack" hidden>
-        <textarea class="textarea" id="pasteTa" placeholder="Copy the cells in Google Sheets (with the header row) and paste here.&#10;Name, Email or Phone, …"></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;color:#94A3B8">Paste cells from sheet (Name, Phone/Email):</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px;color:#94A3B8">Tier:</span>
+            <select class="select" id="pasteTier" style="padding:2px 8px;font-size:11px">
+              <option value="Standard">Standard</option>
+              <option value="VIP">⭐ VIP</option>
+              <option value="Backstage">⚡ Backstage</option>
+            </select>
+          </div>
+        </div>
+        <textarea class="textarea" id="pasteTa" placeholder="Copy cells in Google Sheets and paste here.&#10;Amit Shah, 9876543210&#10;Rahul Patel, rahul@gmail.com"></textarea>
         <button class="btn" type="button" id="pasteUse">Use these rows</button>
       </div>`;
+
     slot.querySelector("#file").addEventListener("change", async (e) => {
       const f = e.target.files?.[0];
       if (!f) return;
       if (f.size > 4e6) return toast("That file is over 4 MB. Export just the responses sheet.", "x");
       loadRows(state, await f.text(), f.name);
     });
+
     slot.querySelector("#pasteBtn").addEventListener("click", () => {
       const box = slot.querySelector("#pasteBox");
       box.hidden = !box.hidden;
-      if (!box.hidden) slot.querySelector("#pasteTa").focus();
+      if (!box.hidden) {
+        slot.querySelector("#quickAddBox").hidden = true;
+        slot.querySelector("#pasteTa").focus();
+      }
     });
-    slot.querySelector("#pasteUse").addEventListener("click", () => loadRows(state, slot.querySelector("#pasteTa").value, "pasted rows"));
+
+    slot.querySelector("#quickAddBtn").addEventListener("click", () => {
+      const box = slot.querySelector("#quickAddBox");
+      box.hidden = !box.hidden;
+      if (!box.hidden) {
+        slot.querySelector("#pasteBox").hidden = true;
+        slot.querySelector("#qaName").focus();
+      }
+    });
+
+    slot.querySelector("#closeQuickAdd").addEventListener("click", () => {
+      slot.querySelector("#quickAddBox").hidden = true;
+    });
+
+    slot.querySelector("#qaSubmit").addEventListener("click", async () => {
+      const nameIn = slot.querySelector("#qaName").value.trim();
+      const tierIn = slot.querySelector("#qaTier").value;
+      const contactIn = slot.querySelector("#qaContact").value.trim();
+      if (!nameIn) return toast("Enter attendee name", "x");
+
+      let finalName = nameIn;
+      if (tierIn !== "Standard" && !new RegExp(tierIn, "i").test(finalName)) {
+        finalName = `${finalName} (${tierIn})`;
+      }
+
+      const newPass = [{
+        event_id: state.ev.id,
+        name: finalName,
+        contact: contactIn
+      }];
+
+      if (localBackend.isDemoSession() || !sb) {
+        localBackend.addPasses(newPass);
+        state.passes.push(...newPass);
+      } else {
+        const { data, error } = await sb.from("gp_passes").insert(newPass).select("id,name,contact,token,created_at");
+        if (error) return toast(error.message, "x");
+        state.passes.push(...data);
+      }
+
+      toast(`Created ${tierIn} pass for ${nameIn}`);
+      renderReg(state); renderStat(state); renderPassTools(state); renderList(state);
+    });
+
+    slot.querySelector("#pasteUse").addEventListener("click", () => {
+      const tierSel = slot.querySelector("#pasteTier")?.value || "Standard";
+      loadRows(state, slot.querySelector("#pasteTa").value, "pasted rows", tierSel);
+    });
     return;
   }
 
-  const { a, fileName, nameCol, contactCol, open } = up;
-  const res = toPasses(a, nameCol, contactCol, state.passes);
+  const { a, fileName, nameCol, contactCol, tierCol, defaultTier, open } = up;
+  const res = toPasses(a, nameCol, contactCol, state.passes, tierCol, defaultTier);
   up.res = res;
   const n = res.passes.length;
   const skipped = [res.blank && `${plural(res.blank, "row")} without a name`, res.dup && `${plural(res.dup, "duplicate")}`].filter(Boolean).join(", ");
   const opt = (sel, none) => `${none ? `<option value="-1" ${sel === -1 ? "selected" : ""}>None</option>` : ""}${a.cols.map((c) => `<option value="${c.i}" ${c.i === sel ? "selected" : ""}>${esc(c.label)}</option>`).join("")}`;
+
   slot.innerHTML = `
     <button class="row" type="button" id="toggle" aria-expanded="${open ? "true" : "false"}">
       <span style="width:30px;height:36px;display:block">${I.doc}</span>
@@ -677,13 +775,25 @@ function renderReg(state) {
       <span class="chev" style="transition:rotate .2s;${open ? "rotate:90deg" : ""}">${I.chev}</span>
     </button>
     <div class="upload-preview" ${open ? "" : "hidden"}>
-      <div class="two">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px">
         <label class="field"><span>Name column</span><select class="select" id="nameCol">${opt(nameCol)}</select></label>
         <label class="field"><span>Contact column</span><select class="select" id="contactCol">${opt(contactCol, true)}</select></label>
+        <label class="field"><span>Tier column</span><select class="select" id="tierCol">${opt(tierCol, true)}</select></label>
+        <label class="field">
+          <span>Batch Pass Tier</span>
+          <select class="select" id="batchTier">
+            <option value="Standard" ${defaultTier === "Standard" ? "selected" : ""}>Standard</option>
+            <option value="VIP" ${defaultTier === "VIP" ? "selected" : ""}>⭐ VIP</option>
+            <option value="Backstage" ${defaultTier === "Backstage" ? "selected" : ""}>⚡ Backstage</option>
+          </select>
+        </label>
       </div>
       <table class="preview-table">
-        <thead><tr><th>Name</th><th>Contact</th></tr></thead>
-        <tbody>${res.passes.slice(0, 5).map((p) => `<tr><td>${esc(p.name)}</td><td>${esc(p.contact || "—")}</td></tr>`).join("") || `<tr><td colspan="2">No usable rows. Pick the column that has names.</td></tr>`}</tbody>
+        <thead><tr><th>Name</th><th>Contact</th><th>Tier Tag</th></tr></thead>
+        <tbody>${res.passes.slice(0, 5).map((p) => {
+          const tier = getTier(p);
+          return `<tr><td>${esc(p.name)}</td><td>${esc(p.contact || "—")}</td><td><span class="mini-tier ${tier.cssClass}">${tier.icon} ${tier.shortLabel}</span></td></tr>`;
+        }).join("") || `<tr><td colspan="3">No usable rows. Pick the column that has names.</td></tr>`}</tbody>
       </table>
       ${n > 5 ? `<p class="fine" style="margin:0">…and ${n - 5} more.</p>` : ""}
       <button class="btn small pinkline" type="button" id="cancelUp" style="align-self:flex-start">${I.x}Cancel</button>
@@ -693,19 +803,30 @@ function renderReg(state) {
       <span class="label">Generate ${n} ${n === 1 ? "pass" : "passes"}</span>
       <span class="arrow">${I.arrow}</span>
     </button>`;
+
   slot.querySelector("#toggle").addEventListener("click", () => { up.open = !up.open; renderReg(state); });
   slot.querySelector("#nameCol")?.addEventListener("change", (e) => { up.nameCol = +e.target.value; renderReg(state); });
   slot.querySelector("#contactCol")?.addEventListener("change", (e) => { up.contactCol = +e.target.value; renderReg(state); });
+  slot.querySelector("#tierCol")?.addEventListener("change", (e) => { up.tierCol = +e.target.value; renderReg(state); });
+  slot.querySelector("#batchTier")?.addEventListener("change", (e) => { up.defaultTier = e.target.value; renderReg(state); });
   slot.querySelector("#cancelUp")?.addEventListener("click", () => { state.upload = null; renderReg(state); });
   slot.querySelector("#gen").addEventListener("click", () => generate(state));
 }
 
-function loadRows(state, text, fileName) {
+function loadRows(state, text, fileName, defaultTier = "Standard") {
   const rows = parseTable(text);
   if (!rows.length) return toast("That sheet is empty", "x");
   const a = analyse(rows);
   if (a.body.length > MAX_ROWS) return toast(`That's ${a.body.length} rows. EntryGo takes up to ${MAX_ROWS} at a time.`, "x");
-  state.upload = { a, fileName, nameCol: a.name, contactCol: a.contact, open: !a.hasHeader };
+  state.upload = {
+    a,
+    fileName,
+    nameCol: a.name,
+    contactCol: a.contact,
+    tierCol: a.tier ?? -1,
+    defaultTier,
+    open: !a.hasHeader || a.tier >= 0
+  };
   renderReg(state);
 }
 
@@ -858,21 +979,25 @@ function renderStat(state, bump = false) {
   if (bump) { const n = el.querySelector("#snum"); n.animate([{ transform: "scale(1.08)", color: "#FF2FA2" }, { transform: "scale(1)" }], { duration: 520, easing: "cubic-bezier(.16,1,.3,1)" }); }
 }
 
-// ── gate code ──
+// ── gate code & links ──
 function renderGate(state, showQr = false) {
   const ev = state.ev, el = view.querySelector("#gatebox");
   el.innerHTML = `
-    <p class="kicker-free">Gate code</p>
-    <p class="gate-code ink" aria-label="Gate code ${fmtCode(ev.gate_code).split("").join(" ")}">${fmtCode(ev.gate_code)}</p>
-    <p class="fine">Staff open <b>${esc(gateUrl("").replace(/#$/, "").replace(/^https?:\/\//, ""))}</b> and type this. Anyone with the code can scan, so share it only with your team.</p>
+    <div>
+      <p class="kicker-free" style="margin:0">Gate Access</p>
+      <p class="gate-code ink" aria-label="Gate code ${fmtCode(ev.gate_code).split("").join(" ")}">${fmtCode(ev.gate_code)}</p>
+    </div>
+    <p class="fine">Staff open <b>${esc(gateUrl("").replace(/#$/, "").replace(/^https?:\/\//, ""))}</b> and type this code to scan. The first scan admits the attendee.</p>
     <div class="btns">
       <button class="btn small" type="button" id="cpGate">${I.link}Copy gate link</button>
-      <button class="btn small" type="button" id="qrGate" aria-expanded="${showQr}">${I.qr}${showQr ? "Hide QR" : "Show QR"}</button>
+      <button class="btn small" type="button" id="qrGate" aria-expanded="${showQr}">${I.qr}${showQr ? "Hide Gate QR" : "Show Gate QR"}</button>
       <button class="btn small" type="button" id="rot">${I.refresh}New code</button>
     </div>
     ${showQr ? `<div class="gate-qr">${qrSvg(gateUrl(ev.gate_code), { label: "QR to join the gate" })}<p class="fine" style="color:var(--blue);margin:0">Staff scan this with their phone camera to open the scanner with the code filled in.</p></div>` : ""}`;
+
   el.querySelector("#cpGate").addEventListener("click", async () => { (await copyText(gateUrl(ev.gate_code))) ? toast("Gate link copied") : toast("Couldn't copy", "x"); });
   el.querySelector("#qrGate").addEventListener("click", () => renderGate(state, !showQr));
+
   let armed = 0;
   el.querySelector("#rot").addEventListener("click", async (e) => {
     const b = e.currentTarget;
@@ -1008,9 +1133,13 @@ function renderPassTools(state) {
 function rowHtml(state, p) {
   const s = state.first.get(p.id);
   const send = sendHref(state, p);
+  const tier = getTier(p);
   return `
     <li data-id="${p.id}">
-      <p class="pl-name">${esc(p.name)}</p>
+      <p class="pl-name">
+        ${esc(p.name)}
+        <span class="mini-tier ${tier.cssClass}">${tier.icon} ${tier.shortLabel}</span>
+      </p>
       <p class="pl-meta">${s ? `<span class="in">✓ In ${esc(fmtTime(s.scanned_at))} · ${esc(s.gate)}</span> · ` : `<span style="color:#64748B">Not checked in</span> · `}${esc(p.contact || "no contact")}</p>
       <div class="pl-actions">
         ${send && send.label === "Email" ? `<button class="icon-btn" type="button" data-preview-mail="${p.id}" aria-label="Preview and send email" title="Preview email">${send.icon}</button>` : (send ? `<a class="icon-btn" href="${esc(send.href)}" target="_blank" rel="noopener" aria-label="${send.label} ${esc(p.name)} their pass" title="${send.label}">${send.icon}</a>` : "")}
@@ -1023,7 +1152,7 @@ function rowHtml(state, p) {
 function renderList(state) {
   const ul = view.querySelector("#plist"), more = view.querySelector("#more");
   const f = state.filter.trim().toLowerCase();
-  
+
   let list = state.passes;
   // Apply Search
   if (f) {
@@ -1042,7 +1171,7 @@ function renderList(state) {
 
   const remaining = list.length - state.shown;
   more.innerHTML = remaining > 0 ? `<button class="btn small" type="button" id="moreBtn">Show next ${Math.min(state.pageSize, remaining)} of ${remaining} more</button>` : (list.length > 0 && state.pageSize !== 9999 ? `<p class="fine" style="text-align:center;margin:6px 0 0;color:#64748B">Showing all ${list.length} passes</p>` : "");
-  
+
   more.querySelector("#moreBtn")?.addEventListener("click", () => {
     state.shown += state.pageSize;
     renderList(state);
