@@ -5568,3 +5568,208 @@ body {
   border: 1px solid rgba(148, 163, 184, 0.2);
 }
 
+
+/* ═══════════════════════════════════════════════════════════════
+   PREMIUM ORGANISER DASHBOARD & EVENT LIST ENHANCEMENTS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Overall container and navbar enhancements */
+.mast {
+  background: rgba(10, 15, 29, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+  padding: 12px 20px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+
+.user-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #F8FAFC;
+}
+
+.user-badge-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #38BDF8, #818CF8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #070B16;
+}
+
+/* Overview KPI Cards Row */
+.overview-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 16px 0 24px;
+}
+
+.kpi-card {
+  background: linear-gradient(135deg, rgba(22, 30, 49, 0.8) 0%, rgba(10, 15, 29, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.kpi-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.kpi-card-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kpi-card-icon {
+  font-size: 16px;
+  opacity: 0.85;
+}
+
+.kpi-card-val {
+  font-family: var(--f-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: #F8FAFC;
+  line-height: 1;
+}
+
+.kpi-card-sub {
+  font-size: 11px;
+  color: #64748B;
+  margin-top: 4px;
+}
+
+/* Event Stub Cards Redesign */
+.stub {
+  background: linear-gradient(135deg, rgba(22, 30, 49, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+  border-radius: 16px !important;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.stub:hover {
+  transform: translateY(-3px) scale(1.005) !important;
+  border-color: rgba(56, 189, 248, 0.4) !important;
+  box-shadow: 0 18px 35px -5px rgba(0, 0, 0, 0.8), 0 0 25px rgba(56, 189, 248, 0.15) !important;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.98) 100%) !important;
+}
+
+.stub-name {
+  color: #F8FAFC !important;
+  font-size: 22px !important;
+  letter-spacing: 0.02em !important;
+}
+
+.stub-meta {
+  color: #94A3B8 !important;
+  font-size: 13.5px !important;
+}
+
+/* Dashboard left column cards glass feel */
+.dash .poster {
+  border-radius: 18px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.dash .stat, .dash .gatebox {
+  background: linear-gradient(135deg, rgba(22, 30, 49, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dash .right {
+  background: linear-gradient(135deg, rgba(22, 30, 49, 0.5) 0%, rgba(15, 23, 42, 0.7) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: clamp(14px, 3vw, 22px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.passlist {
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.passlist li {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  padding: 14px 8px !important;
+  border-radius: 12px;
+  transition: background 0.15s ease;
+}
+
+.passlist li:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pl-name {
+  color: #F8FAFC !important;
+}
+
+.icon-btn {
+  background: rgba(15, 23, 42, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #94A3B8 !important;
+  border-radius: 10px !important;
+  transition: all 0.2s ease !important;
+}
+
+.icon-btn:hover {
+  background: #1E293B !important;
+  color: #38BDF8 !important;
+  border-color: rgba(56, 189, 248, 0.4) !important;
+  transform: translateY(-1px);
+}
+
+/* Backlink styling */
+.backlink {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 14px !important;
+  background: rgba(15, 23, 42, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 20px !important;
+  color: #94A3B8 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  margin-bottom: 16px !important;
+  transition: all 0.2s ease !important;
+}
+
+.backlink:hover {
+  color: #38BDF8 !important;
+  background: #1E293B !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+  transform: translateX(-2px);
+}

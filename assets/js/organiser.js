@@ -196,7 +196,21 @@ function route() {
   if (route.last !== undefined && route.last !== h) window.scrollTo(0, 0);
   route.last = h;
   if (!session) return signInView();
-  roleEl.innerHTML = `Organiser <button class="icon-btn" type="button" id="signout" title="Sign out (${esc(session.user.email || "")})" aria-label="Sign out" style="width:36px;height:36px;margin-left:4px">${I.out}</button>`;
+  const emailStr = session?.user?.email || "organiser";
+  const userInit = (emailStr[0] || "O").toUpperCase();
+  const isDemo = localBackend.isDemoSession();
+  roleEl.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="user-badge-pill" title="${esc(emailStr)}">
+        <span class="user-badge-avatar">${esc(userInit)}</span>
+        <span style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(emailStr)}</span>
+        ${isDemo ? `<span style="font-size:10px;background:#F59E0B;color:#000;font-weight:800;padding:1px 6px;border-radius:10px">DEMO</span>` : ""}
+      </div>
+      <button class="icon-btn" type="button" id="signout" title="Sign out (${esc(emailStr)})" aria-label="Sign out" style="width:36px;height:36px;color:#FB7185">
+        ${I.out}
+      </button>
+    </div>
+  `;
   roleEl.querySelector("#signout").addEventListener("click", async () => {
     localBackend.setDemoSession(false);
     if (sb) await sb.auth.signOut();
@@ -411,21 +425,66 @@ async function listView() {
       </a>`;
   }).join("");
 
+  const totalEventsCount = data.length;
+  const totalPassesAll = data.reduce((acc, e) => acc + (e.gp_passes?.[0]?.count || 0), 0);
+  const totalCheckedAll = data.reduce((acc, e) => acc + (e.gp_scans?.[0]?.count || 0), 0);
+  const overallPct = totalPassesAll ? Math.min(100, Math.round((totalCheckedAll / totalPassesAll) * 100)) : 0;
+
   view.innerHTML = `
-    <section class="stack narrow">
-      <div class="head-row" style="display:flex;justify-content:space-between;align-items:center">
-        <h1 class="head" style="margin:0">Your events</h1>
+    <section class="stack" style="max-width:760px;margin:0 auto;width:100%">
+      <!-- Header Row -->
+      <div class="head-row" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div>
+          <h1 class="head" style="margin:0;font-size:28px">Your Events</h1>
+          <p style="margin:4px 0 0;font-size:13px;color:#94A3B8">Manage club events, generate verified QR passes, and oversee live gates</p>
+        </div>
         <a class="btn-primary compact" href="#/new" style="margin:0">
           <span class="tix">${I.ticket}</span>
-          <span class="label">Create event</span>
+          <span class="label">Create Event</span>
           <span class="arrow">${I.arrow}</span>
         </a>
       </div>
-      ${data.length ? `<div class="stubs-list stack" style="gap:10px">${stubs}</div>` : `
-        <div class="empty" style="text-align:center;padding:40px 20px;background:rgba(15,23,42,0.6);border:1px dashed rgba(56,189,248,0.3);border-radius:20px;margin-top:14px">
-          <div style="font-size:48px;margin-bottom:12px">🎪</div>
-          <h3 style="color:#F8FAFC;font-size:22px;margin:0 0 8px">No events created yet</h3>
-          <p class="sub" style="color:#94A3B8;max-width:380px;margin:0 auto 20px;font-size:14px">Make your first club event, drop in your registrations sheet, and every person gets their cryptographic QR ticket.</p>
+
+      <!-- Overview KPI Cards -->
+      ${totalEventsCount ? `
+        <div class="overview-kpis">
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-card-label">Active Events</span>
+              <span class="kpi-card-icon">🎪</span>
+            </div>
+            <div class="kpi-card-val">${totalEventsCount}</div>
+            <div class="kpi-card-sub">College club events</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-card-label">Total Passes</span>
+              <span class="kpi-card-icon">🎟️</span>
+            </div>
+            <div class="kpi-card-val">${totalPassesAll}</div>
+            <div class="kpi-card-sub">Registered attendees</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-card-label">Checked In</span>
+              <span class="kpi-card-icon">⚡</span>
+            </div>
+            <div class="kpi-card-val" style="color:#34D399">${totalCheckedAll}</div>
+            <div class="kpi-card-sub">${overallPct}% admitted through gate</div>
+          </div>
+        </div>
+      ` : ""}
+
+      ${data.length ? `
+        <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.04em">Event Catalog (${data.length})</span>
+        </div>
+        <div class="stubs-list stack" style="gap:12px">${stubs}</div>
+      ` : `
+        <div class="empty" style="text-align:center;padding:50px 24px;background:rgba(15,23,42,0.6);border:1px dashed rgba(56,189,248,0.3);border-radius:24px;margin-top:16px">
+          <div style="font-size:52px;margin-bottom:14px">🎪</div>
+          <h3 style="color:#F8FAFC;font-size:24px;margin:0 0 10px">No events created yet</h3>
+          <p class="sub" style="color:#94A3B8;max-width:420px;margin:0 auto 24px;font-size:14.5px;line-height:1.5">Create your first college tech fest, DJ night, or hackathon. Upload your spreadsheet and every attendee gets their cryptographic QR ticket.</p>
           <a class="btn-primary compact" href="#/new" style="display:inline-flex;margin:0 auto">
             <span class="tix">${I.ticket}</span>
             <span class="label">Create your first event</span>
@@ -641,11 +700,20 @@ async function eventView(id) {
 
   document.title = `${typo(ev.name)} · EntryGo`;
   view.innerHTML = `
-    <a class="backlink" href="#">${I.back}Your events</a>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <a class="backlink" href="#" style="margin:0">${I.back}Back to All Events</a>
+      <div style="display:flex;gap:8px">
+        <a class="btn small" href="#/e/${id}/edit" style="background:#1E293B;color:#F8FAFC">${I.gear || "✏️"} Edit Details</a>
+        <a class="btn small" href="${esc(gateUrl(ev.gate_code))}" target="_blank" rel="noopener" style="background:#0284C7;color:#fff">${I.qr} Open Gate</a>
+      </div>
+    </div>
+
     <div class="dash">
       <div class="left stack">
         <div class="poster" id="poster" style="position:relative">
-          <a class="btn small" href="#/e/${id}/edit" style="position:absolute;top:12px;right:12px;background:rgba(15,23,42,0.85);backdrop-filter:blur(6px);border-color:rgba(255,255,255,0.2);color:#F8FAFC;font-size:12px;padding:4px 10px;z-index:2">${I.gear || "✏️"} Edit event</a>
+          <div style="position:absolute;top:12px;right:12px;display:flex;gap:6px;z-index:2">
+            <span style="font-size:11px;background:rgba(15,23,42,0.85);backdrop-filter:blur(6px);border:1px solid rgba(56,189,248,0.3);color:#38BDF8;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:0.04em">LIVE DASHBOARD</span>
+          </div>
           <h1 class="poster-title ink">${escT(ev.name)}</h1>
           ${ev.club ? `<p class="poster-club">${esc(ev.club)}</p>` : ""}
           <span class="poster-when">${esc(fmtWhen(ev.starts_at))}${ev.venue ? ` · ${esc(ev.venue)}` : ""}</span>
@@ -656,12 +724,18 @@ async function eventView(id) {
         <div class="gatebox" id="gatebox"></div>
       </div>
       <div class="right stack">
-        <div class="head-row section-gap-m"><h2 class="head">Passes</h2><span class="fine" id="pcount"></span></div>
+        <div class="head-row section-gap-m" style="border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:10px">
+          <div>
+            <h2 class="head" style="margin:0;font-size:24px">Pass Management</h2>
+            <p style="margin:2px 0 0;font-size:12px;color:#94A3B8">View, search, change tiers, and dispatch passes</p>
+          </div>
+          <span class="fine" id="pcount"></span>
+        </div>
         <div id="passTools" class="stack"></div>
         <ul class="passlist" id="plist"></ul>
         <div class="more-row" id="more"></div>
-        <div class="danger-zone">
-          <a class="btn small" href="#/e/${id}/edit">Edit details</a>
+        <div class="danger-zone" style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;color:#64748B">Event ID: <code style="font-size:11px">${id.slice(0, 8)}...</code></span>
           <button class="btn small danger" type="button" id="del">${I.trash}Delete event</button>
         </div>
       </div>
