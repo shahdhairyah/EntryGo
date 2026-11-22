@@ -1,0 +1,12 @@
+# Robots.txt for EntryGo (https://entrygo.live)
+User-agent: *
+Allow: /
+Allow: /p/
+Allow: /gate/
+
+# Disallow private vendor dependencies and internal configuration files
+Disallow: /vendor/
+Disallow: /config.js
+
+# Sitemap location for Google Search Console & other crawlers
+Sitemap: https://entrygo.live/sitemap.xml
