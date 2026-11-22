@@ -1,12 +1,6 @@
-1   VIP / Normal Tier Pass Badging (કેટેગરી બેજ)
-શું છે: પાસ પર "VIP", "Standard", "Backstage Staff" જેવા અલગ-અલગ કલરફુલ ગ્લો બેજ દેખાય.
-લાભ: ગેટ સ્કેનર સ્ક્રીન પર પણ મોટો બેજ ફ્લેશ થશે, જેથી સિક્યોરિટીને ખ્યાલ આવે કે વ્યક્તિ VIP છે કે Normal.
-
 2   Instant WhatsApp / Email Bulk Dispatch (વન-ક્લિક બલ્ક સેન્ડિંગ)
 શું છે: અત્યારે એક-એક કરીને મોકલવું પડે છે, તેની જગ્યાએ બધી લિંક્સ એકસાથે CSV અથવા WhatsApp API/Web દ્વારા ઝડપથી મોકલવાનો વિકલ્પ.
 લાભ: ઓર્ગેનાઈઝરનો કલાકોનો સમય બચી જશે.
-
-
 
 git remote add origin https://github.com/shahdhairyah/EntryGo.git
 git branch -M main

@@ -88,20 +88,16 @@ export function toPasses(a, nameCol, contactCol, existing = [], tierCol = -1, de
   const out = [];
   let blank = 0, dup = 0;
   for (const r of a.body) {
-    let name = (r[nameCol] || "").replace(/\s+/g, " ").trim().slice(0, 120);
+    const name = (r[nameCol] || "").replace(/\s+/g, " ").trim().slice(0, 120);
     const contact = contactCol >= 0 ? (r[contactCol] || "").replace(/\s+/g, " ").trim().slice(0, 160) : "";
-    let tierVal = tierCol >= 0 ? (r[tierCol] || "").trim() : defaultTier;
+    let tier = tierCol >= 0 ? (r[tierCol] || "").trim() : (defaultTier || "Standard");
+    if (!tier) tier = "Standard";
     if (!name) { blank++; continue; }
-
-    // If tier is VIP / Backstage and not already in name, append cleanly
-    if (tierVal && tierVal !== "Standard" && !new RegExp(tierVal, "i").test(name)) {
-      name = `${name} (${tierVal})`;
-    }
 
     const k = key(name, contact);
     if (seen.has(k)) { dup++; continue; }
     seen.add(k);
-    out.push({ name, contact });
+    out.push({ name, contact, tier });
   }
   return { passes: out, blank, dup };
 }

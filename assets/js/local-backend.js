@@ -108,11 +108,21 @@ export const localBackend = {
     for (const p of newPasses) {
       if (!p.id) p.id = "p-" + Math.random().toString(36).substring(2, 10);
       if (!p.token) p.token = "ZX" + Array.from(crypto.getRandomValues(new Uint8Array(15)), b => b.toString(16).padStart(2, "0")).join("");
+      if (!p.tier) p.tier = "Standard";
       if (!p.created_at) p.created_at = new Date().toISOString();
       passes.push(p);
     }
     setStorage(STORAGE_KEY_PASSES, passes);
     return newPasses;
+  },
+
+  savePass(pass) {
+    const passes = getStorage(STORAGE_KEY_PASSES, []);
+    const idx = passes.findIndex(x => x.id === pass.id);
+    if (idx !== -1) {
+      passes[idx] = { ...passes[idx], ...pass };
+      setStorage(STORAGE_KEY_PASSES, passes);
+    }
   },
 
   getScans(eventId) {
@@ -131,6 +141,7 @@ export const localBackend = {
       id: p.id,
       name: p.name,
       contact: p.contact,
+      tier: p.tier || "Standard",
       token: p.token,
       checked_in_at: firstScan ? firstScan.scanned_at : null,
       gate: firstScan ? firstScan.gate : null,
@@ -166,6 +177,7 @@ export const localBackend = {
       return {
         status: "dup",
         name: p.name,
+        tier: p.tier || "Standard",
         first_at: existing.scanned_at,
         first_gate: existing.gate,
         repeats: scans.filter(s => s.pass_id === p.id && !s.accepted).length,
@@ -187,6 +199,7 @@ export const localBackend = {
     return {
       status: "ok",
       name: p.name,
+      tier: p.tier || "Standard",
       scanned_at: now
     };
   },
@@ -197,18 +210,22 @@ export const localBackend = {
     if (!ev) return null;
     const passes = this.getPasses(ev.id);
     const scans = this.getScans(ev.id);
-    const checkedInCount = new Set(scans.filter(s => s.accepted).map(s => s.pass_id)).size;
+    const checkedInIds = new Set(scans.filter(s => s.accepted).map(s => s.pass_id));
+    const checkedInCount = checkedInIds.size;
     const recent = scans.slice(-8).reverse().map(s => {
       const p = passes.find(x => x.id === s.pass_id);
       return {
         id: s.pass_id,
         name: p ? p.name : "Attendee",
+        tier: p ? (p.tier || "Standard") : "Standard",
         scanned_at: s.scanned_at,
-        accepted: s.accepted
+        gate: s.gate || null,
+        accepted: s.accepted,
+        is_first: s.accepted  // first (accepted) scan = green, repeat = red
       };
     });
     return {
-      counts: { total: passes.length, checked_in: checkedInCount },
+      counts: { total: passes.length, checked: checkedInCount, checked_in: checkedInCount },
       recent
     };
   },
@@ -226,7 +243,60 @@ export const localBackend = {
       club: ev.club,
       starts_at: ev.starts_at,
       venue: ev.venue,
-      counts: { total: passes.length, checked_in: checkedInCount }
+      counts: { total: passes.length, checked: checkedInCount, checked_in: checkedInCount }
     };
+  },
+
+  findByName(code, query) {
+    const cleanCode = (code || "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    const ev = this.getEvents().find(e => (e.gate_code || "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase() === cleanCode);
+    if (!ev) return [];
+    const q = (query || "").toLowerCase().trim();
+    if (q.length < 2) return [];
+    const passes = this.getPasses(ev.id);
+    const scans = getStorage(STORAGE_KEY_SCANS, []);
+    return passes
+      .filter(p => (p.name || "").toLowerCase().includes(q))
+      .map(p => {
+        const firstScan = scans.find(s => s.pass_id === p.id && s.accepted);
+        const contact = p.contact || "";
+        const masked = contact.includes("@")
+          ? contact.replace(/^(.{2}).*(@.*)$/, "$1\u2022\u2022\u2022$2")
+          : contact.replace(/^(.{0})(\d*)(\d{4})$/, (_, a, b, c) => `\u2022\u2022\u2022${c}`);
+        return {
+          id: p.id,
+          name: p.name,
+          tier: p.tier || "Standard",
+          hint: masked || null,
+          checked_in_at: firstScan ? firstScan.scanned_at : null,
+          gate: firstScan ? firstScan.gate : null
+        };
+      });
+  },
+
+  admitPass(code, passId, gate, device) {
+    const cleanCode = (code || "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    const ev = this.getEvents().find(e => (e.gate_code || "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase() === cleanCode);
+    if (!ev) return { status: "bad_code" };
+    const passes = getStorage(STORAGE_KEY_PASSES, []);
+    const p = passes.find(x => x.id === passId);
+    if (!p) return { status: "unknown" };
+    const scans = getStorage(STORAGE_KEY_SCANS, []);
+    const existing = scans.find(s => s.pass_id === p.id && s.accepted);
+    if (existing) {
+      return {
+        status: "dup",
+        name: p.name,
+        tier: p.tier || "Standard",
+        first_at: existing.scanned_at,
+        first_gate: existing.gate,
+        repeats: scans.filter(s => s.pass_id === p.id && !s.accepted).length,
+        same_device: existing.device === device
+      };
+    }
+    const now = new Date().toISOString();
+    scans.push({ event_id: ev.id, pass_id: p.id, token: p.token, gate, device, scanned_at: now, accepted: true });
+    setStorage(STORAGE_KEY_SCANS, scans);
+    return { status: "ok", name: p.name, tier: p.tier || "Standard", scanned_at: now, gate };
   }
 };

@@ -54,24 +54,28 @@
         <label class="field">
           <span class="field-label">Gate Access Code</span>
           <div class="code-input-wrapper">
-            <input class="input code-input" id="code" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" maxlength="9" placeholder="••••-••••" aria-describedby="joinErr" required autofocus>
+            <input class="input code-input" id="code" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" maxlength="9" placeholder="ABCD-2345" aria-describedby="joinErr" required autofocus>
           </div>
         </label>
 
         <fieldset class="field" style="border:0;margin:0;padding:0">
           <span class="field-label">Select Gate Position</span>
-          <div class="chips" id="gateChips">
+          <div class="chips gate-chips-grid" id="gateChips">
             <label class="chip"><input type="radio" name="gate" value="Gate 1" checked><span>Gate 1</span></label>
             <label class="chip"><input type="radio" name="gate" value="Gate 2"><span>Gate 2</span></label>
             <label class="chip"><input type="radio" name="gate" value="Gate 3"><span>Gate 3</span></label>
             <label class="chip"><input type="radio" name="gate" value="Desk"><span>Desk</span></label>
+            <label class="chip chip-custom"><input type="radio" name="gate" value="Custom" id="gateCustomRadio"><span>Custom</span></label>
+          </div>
+          <div id="customGateBox" style="margin-top:8px" hidden>
+            <input class="input" id="customGateInput" placeholder="Enter custom gate name (e.g. North Gate, VIP Lounge)" maxlength="30" autocomplete="off">
           </div>
         </fieldset>
 
         <p class="err" id="joinErr" role="alert" hidden></p>
 
-        <button class="btn-primary compact" id="joinBtn" type="submit">
-          <span class="label">Open Optical Scanner</span>
+        <button class="btn-primary compact btn-start-scanning" id="joinBtn" type="submit">
+          <span class="label">Start Scanning</span>
           <span class="arrow" data-i="arrow"></span>
         </button>
       </form>
@@ -83,28 +87,48 @@
 
     <!-- Scanner HUD Section (Optical Camera Feed & Realtime Validation) -->
     <section id="scan" hidden>
-      <div class="scan-head">
-        <div class="scan-info">
-          <p class="scan-event" id="evName"></p>
-          <span class="scan-gate" id="gateName"></span>
+      <!-- Top Bar: Event name, gate name, checked in counter, connection dot -->
+      <div class="gate-top-bar" id="gateTopBar">
+        <div class="top-bar-left">
+          <span class="conn-dot online" id="connDot" title="Live Server Connected"></span>
+          <div class="top-bar-titles">
+            <h2 class="top-ev-name" id="evName">Loading Event…</h2>
+            <div class="top-gate-sub">
+              <span class="top-gate-chip" id="gateName">Gate 1</span>
+              <span class="top-counter-badge" id="cNum">0 / 0</span>
+            </div>
+          </div>
         </div>
-        <button class="leave" type="button" id="leaveBtn" title="Switch event or gate">Leave</button>
+        <button class="leave top-leave-btn" type="button" id="leaveBtn" title="Switch event or gate">Leave</button>
+      </div>
+
+      <!-- Tier Breakdown Stats Strip -->
+      <div class="tier-counts-strip" id="tierCountsStrip">
+        <span class="tc-item tc-vip">⭐ VIP <b id="tcVip">0</b></span>
+        <span class="tc-sep">·</span>
+        <span class="tc-item tc-backstage">⚡ Backstage <b id="tcBackstage">0</b></span>
+        <span class="tc-sep">·</span>
+        <span class="tc-item tc-volunteer">🤝 Volunteer <b id="tcVol">0</b></span>
+        <span class="tc-sep">·</span>
+        <span class="tc-item tc-standard">🎟️ Standard <b id="tcStd">0</b></span>
       </div>
 
       <!-- Camera Optical HUD Viewport -->
       <div class="viewport" id="viewport">
         <div class="hud-tag">
           <span class="live-dot"></span>
-          <span>OPTICAL HUD ACTIVE</span>
+          <span>OPTICAL SCAN FRAME</span>
         </div>
         <video id="video" playsinline muted></video>
         <div class="brackets" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="laser-scanner" aria-hidden="true"></div>
 
-        <!-- Camera Controls HUD Bar -->
-        <div class="cam-tools">
-          <span id="camTools" style="display:contents"></span>
-          <button class="icon-btn" type="button" id="findBtn" aria-label="Find attendee by name" title="Find attendee by name"></button>
-          <label class="icon-btn" title="Upload or scan pass photo">
+        <!-- Camera Controls HUD Bar (All tap targets >= 48px) -->
+        <div class="cam-tools-dock" id="camToolsDock">
+          <button class="action-dock-btn" type="button" id="torchBtn" aria-label="Toggle Torch">${I.torch}</button>
+          <button class="action-dock-btn" type="button" id="flipBtn" aria-label="Switch Camera">${I.flip}</button>
+          <button class="action-dock-btn" type="button" id="findBtn" aria-label="Find attendee by name" title="Find attendee by name"></button>
+          <label class="action-dock-btn photo-dock-btn" title="Scan QR from photo / gallery">
             <input type="file" accept="image/*" id="photo" class="sr" aria-label="Upload pass photo">
             <span id="photoLbl"></span>
           </label>
@@ -113,27 +137,38 @@
         <div class="cam-msg" id="camMsg"></div>
       </div>
 
-      <!-- Realtime Pass Verdict Banner -->
-      <div class="verdict idle" id="verdict" role="status" aria-live="assertive"></div>
-
-      <!-- Realtime Event Check-in Statistics -->
-      <div class="counter" id="counter">
-        <div class="c-header">
-          <span class="c-label">Live Checked In</span>
-          <span class="c-num" id="cNum">0 / 0</span>
-        </div>
-        <div class="bar"><i id="cBar"></i></div>
+      <!-- Hint shown when camera is blocked or in Instagram/WhatsApp browser -->
+      <div class="browser-warning-box" id="browserHint" hidden>
+        ⚠️ <strong>Camera access blocked?</strong> Please open this page directly in <b>Google Chrome</b> or <b>Apple Safari</b>, not inside Instagram or WhatsApp in-app browser.
       </div>
 
-      <!-- Live Recent Scans Feed -->
+      <!-- Live Recent Scans Strip (Last 5 with color dot and tier chip) -->
       <div class="gate-recent">
-        <h3 class="recent-title">Recent Gate Activity</h3>
+        <div class="recent-header-row">
+          <h3 class="recent-title">Recent Gate Activity (Last 5)</h3>
+          <span class="recent-live-tag">LIVE FEED</span>
+        </div>
         <ul class="recent-list" id="recent"></ul>
       </div>
     </section>
 
-    <!-- Scan Flash Feedback Overlay -->
-    <div id="flash" class="flash" aria-hidden="true"></div>
+    <!-- Full-Screen Result Overlay (Auto-dismisses in 3s or on tap) -->
+    <div id="resultOverlay" class="result-overlay" hidden role="alert" aria-live="assertive">
+      <div class="result-card" id="resultCard">
+        <div class="result-icon-circle" id="resIcon"></div>
+        <div class="result-verdict-title" id="resTitle">ENTRY OK</div>
+        <div class="result-attendee-name" id="resName">Attendee Name</div>
+        
+        <!-- Large Tier Banner: Full Width, Readable from 1 Metre Away -->
+        <div class="result-tier-banner" id="resTierBanner">
+          <span class="rtb-icon" id="rtbIcon">⭐</span>
+          <span class="rtb-text" id="rtbText">VIP PASS</span>
+        </div>
+
+        <div class="result-sub-detail" id="resSub">First scan at Gate 1 · 7:15 PM</div>
+        <div class="result-tap-hint">Tap anywhere to dismiss</div>
+      </div>
+    </div>
 
     <!-- Footer -->
     <footer class="foot">

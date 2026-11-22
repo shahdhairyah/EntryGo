@@ -26,6 +26,13 @@ async function load() {
     return missing("Couldn't load", esc(e.message));
   }
   if (!p) return missing("No pass here", "This pass doesn't exist or the event was deleted. Ask the organiser to resend your link.");
+
+  // Check client-side updated tier if present
+  const localTier = localStorage.getItem(`gp_tier_${token}`);
+  if (localTier) {
+    p.tier = localTier;
+  }
+
   render(p);
 }
 

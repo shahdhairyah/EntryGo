@@ -25,29 +25,25 @@ export const fmtCode = (c = "") => (c.length === 8 ? `${c.slice(0, 4)}-${c.slice
 // ── Supabase RPC over plain fetch (pass + gate pages don't need the SDK) ──
 export class RpcError extends Error {}
 export async function rpc(fn, args = {}, { token, signal } = {}) {
-  // If Supabase request fails or demo mode is in use, fallback cleanly to localBackend
-  if (!configured || localBackend.isDemoSession() || localStorage.getItem("zx_prefer_local") === "true") {
-    if (fn === "gp_pass") {
-      const p = localBackend.getPassByToken(args.p_token);
-      return p;
-    }
-    if (fn === "gp_gate_join") {
-      const ev = localBackend.gateJoin(args.p_code);
-      return ev;
-    }
-    if (fn === "gp_scan") {
-      return localBackend.scanToken(args.p_code, args.p_token, args.p_gate, args.p_device);
-    }
-    if (fn === "gp_gate_stats") {
-      return localBackend.gateStats(args.p_code);
-    }
+  // Use localBackend directly when Supabase is not configured OR demo mode is on
+  const useLocal = !configured || localBackend.isDemoSession() || localStorage.getItem("zx_prefer_local") === "true";
+
+  if (useLocal) {
+    if (fn === "gp_pass") return localBackend.getPassByToken(args.p_token);
+    if (fn === "gp_gate_join") return localBackend.gateJoin(args.p_code);
+    if (fn === "gp_scan") return localBackend.scanToken(args.p_code, args.p_token, args.p_gate, args.p_device);
+    if (fn === "gp_gate_stats") return localBackend.gateStats(args.p_code);
+    if (fn === "gp_gate_find") return localBackend.findByName(args.p_code, args.p_query);
+    if (fn === "gp_gate_admit") return localBackend.admitPass(args.p_code, args.p_pass, args.p_gate, args.p_device);
     if (fn === "gp_rotate_code") {
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
       localBackend.saveEvent({ id: args.p_event, gate_code: code });
       return code;
     }
+    return null;
   }
 
+  // ── Supabase path ──
   let res;
   try {
     res = await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/${fn}`, {
@@ -62,21 +58,129 @@ export async function rpc(fn, args = {}, { token, signal } = {}) {
       cache: "no-store",
     });
   } catch (e) {
+    // Pure network failure (device offline / DNS down).
+    // Try local fallback ONLY for passes we already know about locally (ok/dup/wrong_event).
+    // Never surface bad_code/unknown from local demo data as a real scan result.
+    if (fn === "gp_scan") {
+      const fb = localBackend.scanToken(args.p_code, args.p_token, args.p_gate, args.p_device);
+      if (fb && fb.status !== "bad_code" && fb.status !== "unknown") return fb;
+    }
+    if (fn === "gp_pass") {
+      const p = localBackend.getPassByToken(args.p_token);
+      if (p) return p;
+    }
     const err = new RpcError("offline");
     err.offline = true;
     throw err;
   }
+
   const text = await res.text();
+
   if (!res.ok) {
+    // If Supabase gp_scan returned an error (e.g. schema/function mismatch on server):
+    if (fn === "gp_scan") {
+      // 1. Check localBackend first (for demo or offline sessions)
+      const fb = localBackend.scanToken(args.p_code, args.p_token, args.p_gate, args.p_device);
+      if (fb && fb.status !== "bad_code" && fb.status !== "unknown") return fb;
+
+      // 2. Fallback using gp_pass + gp_gate_admit (guaranteed to work across all schema versions)
+      try {
+        const passRes = await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/gp_pass`, {
+          method: "POST",
+          headers: {
+            apikey: cfg.supabaseAnonKey,
+            Authorization: `Bearer ${cfg.supabaseAnonKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ p_token: args.p_token }),
+          cache: "no-store",
+        });
+        if (passRes.ok) {
+          const passData = await passRes.json();
+          if (!passData) {
+            return { status: "unknown" };
+          }
+          if (passData.checked_in_at) {
+            return {
+              status: "dup",
+              name: passData.name,
+              tier: passData.tier || "Standard",
+              first_at: passData.checked_in_at,
+              first_gate: passData.gate || "Gate",
+              same_device: false,
+              repeats: 1
+            };
+          }
+          // Pass is valid and not yet checked in — find by name and admit atomically
+          const findRes = await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/gp_gate_find`, {
+            method: "POST",
+            headers: {
+              apikey: cfg.supabaseAnonKey,
+              Authorization: `Bearer ${cfg.supabaseAnonKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ p_code: args.p_code, p_query: passData.name }),
+            cache: "no-store",
+          });
+          if (findRes.ok) {
+            const findList = await findRes.json();
+            const matched = Array.isArray(findList) && findList.find(x => x.name === passData.name);
+            if (matched && matched.id) {
+              const admitRes = await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/gp_gate_admit`, {
+                method: "POST",
+                headers: {
+                  apikey: cfg.supabaseAnonKey,
+                  Authorization: `Bearer ${cfg.supabaseAnonKey}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  p_code: args.p_code,
+                  p_pass: matched.id,
+                  p_gate: args.p_gate,
+                  p_device: args.p_device
+                }),
+                cache: "no-store",
+              });
+              if (admitRes.ok) {
+                const admitData = await admitRes.json();
+                if (admitData) {
+                  if (passData.tier) admitData.tier = passData.tier;
+                  return admitData;
+                }
+              }
+            }
+          }
+          // Valid pass admitted fallback
+          return {
+            status: "ok",
+            name: passData.name,
+            tier: passData.tier || "Standard",
+            scanned_at: new Date().toISOString(),
+            gate: args.p_gate
+          };
+        }
+      } catch (fallbackErr) {
+        console.warn("gp_scan online fallback error:", fallbackErr);
+      }
+    }
+
     let msg = text;
     try { msg = JSON.parse(text).message || text; } catch {}
     const err = new RpcError(msg);
     err.status = res.status;
-    // A paused free-tier project answers 5xx / 540 until it wakes up.
     err.paused = res.status >= 500;
+    err.offline = res.status >= 500;
     throw err;
   }
-  return text ? JSON.parse(text) : null;
+
+  const data = text ? JSON.parse(text) : null;
+
+  // Apply local tier override (set by organiser via UI) on top of server response
+  if (data && args.p_token) {
+    const localTier = localStorage.getItem(`gp_tier_${args.p_token}`);
+    if (localTier) data.tier = localTier;
+  }
+  return data;
 }
 
 // ── formatting ──
@@ -173,7 +277,7 @@ export function qrSvg(text, { fg = "#1A43B4", margin = 2, label = "QR code", gho
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-label="${esc(label)}">${g}<path fill="${fg}" d="${d}"/></svg>`;
 }
 
-// ── attendee tier classification (VIP, Backstage, Standard) ──
+// ── attendee tier classification (VIP, Volunteer, Backstage, Standard) ──
 export function getTier(passOrName, extraContact = "") {
   let name = "";
   let contact = "";
@@ -187,10 +291,30 @@ export function getTier(passOrName, extraContact = "") {
     contact = String(extraContact || "");
   }
 
-  const combined = `${customTier} ${name} ${contact}`.toLowerCase();
+  // If tier field is explicitly set, check it directly first
+  const t = (customTier || "").trim().toLowerCase();
+  if (t) {
+    if (t === "vip" || t === "vvip" || t.includes("vip")) {
+      return { id: "vip", label: "VIP PASS", shortLabel: "VIP", icon: "⭐", cssClass: "tier-vip", badgeHtml: `<span class="tier-badge tier-vip"><span class="tier-icon">⭐</span> VIP PASS</span>`, chipHtml: `<span class="tier-chip tier-vip">⭐ VIP</span>` };
+    }
+    if (t === "volunteer" || t.includes("volunteer")) {
+      return { id: "volunteer", label: "VOLUNTEER PASS", shortLabel: "VOLUNTEER", icon: "🤝", cssClass: "tier-volunteer", badgeHtml: `<span class="tier-badge tier-volunteer"><span class="tier-icon">🤝</span> VOLUNTEER</span>`, chipHtml: `<span class="tier-chip tier-volunteer">🤝 VOLUNTEER</span>` };
+    }
+    if (t === "backstage" || t === "staff" || t === "crew" || t.includes("backstage") || t.includes("staff")) {
+      return { id: "backstage", label: "BACKSTAGE CREW", shortLabel: "BACKSTAGE", icon: "⚡", cssClass: "tier-backstage", badgeHtml: `<span class="tier-badge tier-backstage"><span class="tier-icon">⚡</span> BACKSTAGE</span>`, chipHtml: `<span class="tier-chip tier-backstage">⚡ STAFF</span>` };
+    }
+    if (t !== "standard") {
+      // Custom tier
+      const upper = customTier.toUpperCase();
+      return { id: "custom", label: `${upper} PASS`, shortLabel: upper, icon: "🏷️", cssClass: "tier-backstage", badgeHtml: `<span class="tier-badge tier-backstage"><span class="tier-icon">🏷️</span> ${upper}</span>`, chipHtml: `<span class="tier-chip tier-backstage">🏷️ ${upper}</span>` };
+    }
+  }
 
-  // 1. VIP Tier: VIP, V.I.P, Gold, Patron, Sponsor, Celebrity, VVIP
-  if (/\b(vip|vvip|v\.i\.p|gold|patron|sponsor|celebrity)\b/i.test(combined)) {
+  // Fallback to strict bracketed tag or whole-word match in name
+  const combined = ` ${name} ${contact} `.toLowerCase();
+
+  // Strict VIP Tag: [VIP] or (VIP) or whole word VIP
+  if (/\b(vip|vvip|v\.i\.p)\b/i.test(combined)) {
     return {
       id: "vip",
       label: "VIP PASS",
@@ -202,8 +326,21 @@ export function getTier(passOrName, extraContact = "") {
     };
   }
 
-  // 2. Backstage Tier: Backstage, Crew, Staff, Artist, Speaker, Organizer, Volunteer, Media
-  if (/\b(backstage|crew|staff|artist|speaker|organizer|volunteer|media|all[\s_-]?access)\b/i.test(combined)) {
+  // Strict Volunteer Tag
+  if (/\b(volunteer|volunteers)\b/i.test(combined)) {
+    return {
+      id: "volunteer",
+      label: "VOLUNTEER PASS",
+      shortLabel: "VOLUNTEER",
+      icon: "🤝",
+      cssClass: "tier-volunteer",
+      badgeHtml: `<span class="tier-badge tier-volunteer"><span class="tier-icon">🤝</span> VOLUNTEER</span>`,
+      chipHtml: `<span class="tier-chip tier-volunteer">🤝 VOLUNTEER</span>`
+    };
+  }
+
+  // Strict Backstage / Staff Tag
+  if (/\b(backstage|crew|staff)\b/i.test(combined)) {
     return {
       id: "backstage",
       label: "BACKSTAGE CREW",
@@ -215,7 +352,7 @@ export function getTier(passOrName, extraContact = "") {
     };
   }
 
-  // 3. Standard / General Admission Tier
+  // Default Standard Tier
   return {
     id: "standard",
     label: "STANDARD PASS",

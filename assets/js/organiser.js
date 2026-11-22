@@ -566,7 +566,7 @@ async function eventView(id) {
       if (!r.data) { toast("That event isn't yours or was deleted", "x"); location.hash = ""; return; }
       ev = r.data;
       [passes, scans] = await Promise.all([
-        fetchAll("gp_passes", "id,name,contact,token,created_at", id),
+        fetchAll("gp_passes", "id,name,contact,tier,token,created_at", id),
         fetchAll("gp_scans", "id,pass_id,is_first,gate,scanned_at", id),
       ]);
     }
@@ -664,14 +664,15 @@ function renderReg(state) {
             <span>Pass Tier / Category</span>
             <select class="select" id="qaTier">
               <option value="VIP">⭐ VIP PASS</option>
+              <option value="Volunteer">🤝 VOLUNTEER</option>
               <option value="Backstage">⚡ BACKSTAGE STAFF</option>
               <option value="Standard" selected>🎟️ STANDARD PASS</option>
             </select>
           </label>
         </div>
         <label class="field">
-          <span>Phone or Email (Optional)</span>
-          <input class="input" id="qaContact" placeholder="e.g. 9876543210 or name@gmail.com" autocomplete="off">
+          <span>Phone or Email (Required)</span>
+          <input class="input" id="qaContact" placeholder="e.g. 9876543210 or name@gmail.com" autocomplete="off" required>
         </label>
         <button class="btn-primary compact" type="button" id="qaSubmit">
           <span class="tix">${I.ticket}</span>
@@ -687,6 +688,7 @@ function renderReg(state) {
             <select class="select" id="pasteTier" style="padding:2px 8px;font-size:11px">
               <option value="Standard">Standard</option>
               <option value="VIP">⭐ VIP</option>
+              <option value="Volunteer">🤝 Volunteer</option>
               <option value="Backstage">⚡ Backstage</option>
             </select>
           </div>
@@ -729,23 +731,20 @@ function renderReg(state) {
       const tierIn = slot.querySelector("#qaTier").value;
       const contactIn = slot.querySelector("#qaContact").value.trim();
       if (!nameIn) return toast("Enter attendee name", "x");
-
-      let finalName = nameIn;
-      if (tierIn !== "Standard" && !new RegExp(tierIn, "i").test(finalName)) {
-        finalName = `${finalName} (${tierIn})`;
-      }
+      if (!contactIn) return toast("Enter phone number or email address", "x");
 
       const newPass = [{
         event_id: state.ev.id,
-        name: finalName,
-        contact: contactIn
+        name: nameIn,
+        contact: contactIn,
+        tier: tierIn
       }];
 
       if (localBackend.isDemoSession() || !sb) {
         localBackend.addPasses(newPass);
         state.passes.push(...newPass);
       } else {
-        const { data, error } = await sb.from("gp_passes").insert(newPass).select("id,name,contact,token,created_at");
+        const { data, error } = await sb.from("gp_passes").insert(newPass).select("id,name,contact,tier,token,created_at");
         if (error) return toast(error.message, "x");
         state.passes.push(...data);
       }
@@ -784,6 +783,7 @@ function renderReg(state) {
           <select class="select" id="batchTier">
             <option value="Standard" ${defaultTier === "Standard" ? "selected" : ""}>Standard</option>
             <option value="VIP" ${defaultTier === "VIP" ? "selected" : ""}>⭐ VIP</option>
+            <option value="Volunteer" ${defaultTier === "Volunteer" ? "selected" : ""}>🤝 Volunteer</option>
             <option value="Backstage" ${defaultTier === "Backstage" ? "selected" : ""}>⚡ Backstage</option>
           </select>
         </label>
@@ -853,14 +853,15 @@ async function generate(state) {
     const batch = list.slice(i, i + 100).map((p) => ({
       event_id: state.ev.id,
       name: p.name,
-      contact: p.contact
+      contact: p.contact,
+      tier: p.tier || "Standard"
     }));
     if (localBackend.isDemoSession() || !sb) {
       localBackend.addPasses(batch);
       state.passes.push(...batch);
       done += batch.length;
     } else {
-      const { data, error } = await sb.from("gp_passes").insert(batch).select("id,name,contact,token,created_at");
+      const { data, error } = await sb.from("gp_passes").insert(batch).select("id,name,contact,tier,token,created_at");
       if (error) { failed = error; break; }
       state.passes.push(...data);
       done += data.length;
@@ -1134,11 +1135,17 @@ function rowHtml(state, p) {
   const s = state.first.get(p.id);
   const send = sendHref(state, p);
   const tier = getTier(p);
+  const curTier = p.tier || (tier.shortLabel === "VIP" ? "VIP" : tier.shortLabel === "VOLUNTEER" ? "Volunteer" : tier.shortLabel === "BACKSTAGE" ? "Backstage" : "Standard");
   return `
     <li data-id="${p.id}">
       <p class="pl-name">
         ${esc(p.name)}
-        <span class="mini-tier ${tier.cssClass}">${tier.icon} ${tier.shortLabel}</span>
+        <select class="tier-select-inline ${tier.cssClass}" data-change-tier="${p.id}" title="Change attendee tier">
+          <option value="Standard" ${curTier === "Standard" ? "selected" : ""}>🎟️ Standard</option>
+          <option value="VIP" ${curTier === "VIP" ? "selected" : ""}>⭐ VIP</option>
+          <option value="Volunteer" ${curTier === "Volunteer" ? "selected" : ""}>🤝 Volunteer</option>
+          <option value="Backstage" ${curTier === "Backstage" ? "selected" : ""}>⚡ Backstage</option>
+        </select>
       </p>
       <p class="pl-meta">${s ? `<span class="in">✓ In ${esc(fmtTime(s.scanned_at))} · ${esc(s.gate)}</span> · ` : `<span style="color:#64748B">Not checked in</span> · `}${esc(p.contact || "no contact")}</p>
       <div class="pl-actions">
@@ -1187,6 +1194,35 @@ function renderList(state) {
     const b = e.target.closest("[data-copy]");
     if (!b) return;
     (await copyText(passUrl(b.dataset.copy))) ? toast("Pass link copied") : toast("Couldn't copy", "x");
+  };
+
+  ul.onchange = async (e) => {
+    const sel = e.target.closest("[data-change-tier]");
+    if (!sel) return;
+    const passId = sel.dataset.changeTier;
+    const newTier = sel.value;
+    const p = state.passes.find(x => x.id === passId);
+    if (!p) return;
+    p.tier = newTier;
+
+    // Save instant local override by pass token & id
+    if (p.token) {
+      localStorage.setItem(`gp_tier_${p.token}`, newTier);
+    }
+    localStorage.setItem(`gp_tier_pass_${passId}`, newTier);
+
+    if (localBackend.isDemoSession() || !sb) {
+      localBackend.savePass({ id: passId, tier: newTier });
+    } else {
+      try {
+        await sb.from("gp_passes").update({ tier: newTier }).eq("id", passId);
+      } catch (err) {
+        console.warn("Supabase update error (cached locally):", err.message);
+      }
+    }
+    toast(`Tier changed to ${newTier} for ${p.name}`);
+    const li = ul.querySelector(`li[data-id="${passId}"]`);
+    if (li) li.outerHTML = rowHtml(state, p);
   };
 }
 

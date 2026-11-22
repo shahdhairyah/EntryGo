@@ -91,8 +91,10 @@ create table if not exists public.gp_passes (
   token       text not null unique default public.gp_new_token() check (char_length(token) >= 32),
   name        text not null check (char_length(btrim(name)) between 1 and 120),
   contact     text not null default '' check (char_length(contact) <= 160),
+  tier        text not null default 'Standard' check (char_length(tier) <= 40),
   created_at  timestamptz not null default now()
 );
+alter table public.gp_passes add column if not exists tier text not null default 'Standard';
 create index if not exists gp_passes_event_idx on public.gp_passes (event_id, created_at);
 
 -- Every scan of a known pass. is_first marks the one that let the person in.
@@ -167,6 +169,8 @@ set search_path = ''
 as $$
   select json_build_object(
     'name', p.name,
+    'contact', p.contact,
+    'tier', coalesce(p.tier, 'Standard'),
     'event', json_build_object(
       'id', e.id, 
       'name', e.name, 
@@ -221,7 +225,7 @@ as $$
 $$;
 
 -- Internal: admit a pass. The INSERT … ON CONFLICT on gp_scans_first_once is the atomic step.
-create or replace function public.gp_admit(p_event uuid, p_pass uuid, p_name text, p_gate text, p_device text)
+create or replace function public.gp_admit(p_event uuid, p_pass uuid, p_name text, p_gate text, p_device text, p_tier text default 'Standard')
 returns json
 language plpgsql
 volatile
@@ -231,6 +235,7 @@ as $$
 declare
   v_gate   text := left(coalesce(nullif(btrim(p_gate), ''), 'Gate'), 40);
   v_device text := left(coalesce(p_device, ''), 40);
+  v_tier   text := left(coalesce(nullif(btrim(p_tier), ''), 'Standard'), 40);
   v_first  public.gp_scans;
   v_tries  int;
 begin
@@ -240,7 +245,7 @@ begin
   returning * into v_first;
 
   if found then
-    return json_build_object('status', 'ok', 'name', p_name, 'scanned_at', v_first.scanned_at,
+    return json_build_object('status', 'ok', 'name', p_name, 'tier', v_tier, 'scanned_at', v_first.scanned_at,
                              'gate', v_first.gate, 'counts', public.gp_counts(p_event));
   end if;
 
@@ -250,7 +255,7 @@ begin
   values (p_event, p_pass, false, v_gate, v_device);
   select count(*) into v_tries from public.gp_scans where pass_id = p_pass and not is_first;
 
-  return json_build_object('status', 'dup', 'name', p_name, 'first_at', v_first.scanned_at,
+  return json_build_object('status', 'dup', 'name', p_name, 'tier', v_tier, 'first_at', v_first.scanned_at,
                            'first_gate', v_first.gate, 'same_device', v_first.device = v_device and v_device <> '',
                            'repeats', v_tries, 'counts', public.gp_counts(p_event));
 end;
@@ -281,7 +286,7 @@ begin
     return json_build_object('status', 'wrong_event');
   end if;
 
-  return public.gp_admit(v_event, v_pass.id, v_pass.name, p_gate, p_device);
+  return public.gp_admit(v_event, v_pass.id, v_pass.name, p_gate, p_device, coalesce(v_pass.tier, 'Standard'));
 end;
 $$;
 
@@ -295,7 +300,7 @@ set search_path = ''
 as $$
   select coalesce(json_agg(r order by r.name), '[]'::json)
   from (
-    select p.id, p.name,
+    select p.id, p.name, coalesce(p.tier, 'Standard') as tier,
            case when p.contact = '' then ''
                 when position('@' in p.contact) > 0
                   then left(p.contact, 2) || '•••' || substr(p.contact, position('@' in p.contact))
@@ -323,15 +328,15 @@ set search_path = ''
 as $$
 declare
   v_event uuid;
-  v_name  text;
+  v_pass  public.gp_passes;
 begin
-  select e.id, p.name into v_event, v_name
+  select e.id, p.id, p.name, coalesce(p.tier, 'Standard') into v_event, v_pass.id, v_pass.name, v_pass.tier
   from public.gp_events e join public.gp_passes p on p.event_id = e.id
   where e.gate_code = public.gp_norm_code(p_code) and p.id = p_pass;
   if v_event is null then
     return json_build_object('status', 'unknown');
   end if;
-  return public.gp_admit(v_event, p_pass, v_name, p_gate, p_device);
+  return public.gp_admit(v_event, v_pass.id, v_pass.name, p_gate, p_device, v_pass.tier);
 end;
 $$;
 
@@ -348,7 +353,7 @@ as $$
     'recent', coalesce((
       select json_agg(x order by x.scanned_at desc)
       from (
-        select p.name, s.gate, s.is_first, s.scanned_at
+        select p.name, coalesce(p.tier, 'Standard') as tier, s.gate, s.is_first, s.scanned_at
         from public.gp_scans s join public.gp_passes p on p.id = s.pass_id
         where s.event_id = e.id
         order by s.scanned_at desc

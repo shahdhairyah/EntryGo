@@ -4678,8 +4678,487 @@ body {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   VIP / BACKSTAGE / STANDARD TIER BADGING STYLES
+   GATE SCANNER FULL REDESIGN (MOBILE-FIRST HIGH-VELOCITY HUD)
    ───────────────────────────────────────────────────────────── */
+
+/* 1. Gate Join Screen */
+.code-input-wrapper {
+  margin-top: 6px;
+}
+
+.code-input {
+  font-family: var(--f-display) !important;
+  font-size: 28px !important;
+  letter-spacing: 0.16em !important;
+  text-align: center !important;
+  text-transform: uppercase !important;
+  padding: 14px 18px !important;
+  border: 1.5px solid rgba(56, 189, 248, 0.45) !important;
+  border-radius: 14px !important;
+  background: rgba(15, 23, 42, 0.95) !important;
+  color: #38BDF8 !important;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.2) !important;
+}
+
+.code-input:focus {
+  border-color: #38BDF8 !important;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.5) !important;
+}
+
+.gate-chips-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)) !important;
+  gap: 8px !important;
+  margin-top: 8px !important;
+}
+
+.gate-chips-grid .chip {
+  margin: 0 !important;
+}
+
+.gate-chips-grid .chip span {
+  display: block;
+  text-align: center;
+  padding: 12px 6px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  min-height: 48px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.btn-start-scanning {
+  min-height: 54px !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  margin-top: 10px !important;
+}
+
+/* 2. Live Scanner Screen: Top Bar */
+.gate-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  margin-bottom: 8px;
+  backdrop-filter: blur(12px);
+}
+
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.conn-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.conn-dot.online {
+  background: #10B981;
+  box-shadow: 0 0 10px #10B981;
+}
+
+.conn-dot.offline {
+  background: #EF4444;
+  box-shadow: 0 0 10px #EF4444;
+  animation: pulseDot 1s infinite;
+}
+
+.top-bar-titles {
+  min-width: 0;
+  flex: 1;
+}
+
+.top-ev-name {
+  font-family: var(--f-display);
+  font-size: 16px;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #FFFFFF;
+  letter-spacing: 0.04em;
+}
+
+.top-gate-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.top-gate-chip {
+  font-size: 11px;
+  font-weight: 800;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38BDF8;
+  padding: 1px 6px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.top-counter-badge {
+  font-size: 12px;
+  font-family: monospace;
+  font-weight: 700;
+  color: #34D399;
+}
+
+.top-leave-btn {
+  background: rgba(244, 63, 94, 0.15) !important;
+  border: 1px solid rgba(244, 63, 94, 0.4) !important;
+  color: #FB7185 !important;
+  padding: 6px 14px !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+}
+
+/* Tier Breakdown Stats Strip */
+.tier-counts-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 5px 8px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94A3B8;
+}
+
+.tc-item b {
+  color: #FFFFFF;
+  margin-left: 2px;
+}
+
+.tc-vip b { color: #FCD34D; }
+.tc-backstage b { color: #F472B6; }
+.tc-volunteer b { color: #34D399; }
+.tc-standard b { color: #38BDF8; }
+.tc-sep { opacity: 0.3; }
+
+/* 3. Camera Optical HUD Viewport & Controls */
+#scan .viewport {
+  position: relative !important;
+  min-height: 340px !important;
+  max-height: 58dvh !important;
+  aspect-ratio: 1 / 1.15 !important;
+  border-radius: 20px !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+  box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.9), 0 0 35px rgba(56, 189, 248, 0.25) !important;
+  border: 2px solid rgba(56, 189, 248, 0.5) !important;
+  overflow: hidden !important;
+}
+
+.laser-scanner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, #38BDF8 50%, transparent 100%);
+  box-shadow: 0 0 15px #38BDF8, 0 0 5px #38BDF8;
+  animation: laserScan 2.2s infinite ease-in-out;
+  pointer-events: none;
+  z-index: 4;
+}
+
+@keyframes laserScan {
+  0% { top: 8%; opacity: 0.3; }
+  50% { top: 92%; opacity: 1; }
+  100% { top: 8%; opacity: 0.3; }
+}
+
+/* Bottom Controls Dock: >= 48px Tap Targets */
+.cam-tools-dock {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 10;
+}
+
+.action-dock-btn {
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  border-radius: 50% !important;
+  background: rgba(9, 13, 22, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
+  color: #FFFFFF !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+}
+
+.action-dock-btn svg {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.action-dock-btn:active {
+  transform: scale(0.92) !important;
+}
+
+.action-dock-btn[aria-pressed="true"],
+.action-dock-btn.active {
+  background: #38BDF8 !important;
+  color: #000000 !important;
+  border-color: #38BDF8 !important;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.7) !important;
+}
+
+.photo-dock-btn {
+  position: relative;
+}
+
+/* Browser Warning Box */
+.browser-warning-box {
+  margin-top: 8px;
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 12px;
+  color: #FCA5A5;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* 4. Full-Screen Result Overlay */
+.result-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(20px);
+  cursor: pointer;
+  animation: overlayFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.result-card {
+  width: min(100%, 420px);
+  padding: 24px 20px;
+  border-radius: 24px;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Verdict Color Variants */
+.result-overlay.res-ok {
+  background: rgba(6, 78, 59, 0.88);
+}
+.result-overlay.res-ok .result-card {
+  background: linear-gradient(180deg, rgba(6, 95, 70, 0.95) 0%, rgba(4, 120, 87, 0.98) 100%);
+  border: 2px solid #34D399;
+  box-shadow: 0 0 50px rgba(16, 185, 129, 0.5);
+}
+
+.result-overlay.res-dup {
+  background: rgba(136, 19, 55, 0.88);
+}
+.result-overlay.res-dup .result-card {
+  background: linear-gradient(180deg, rgba(159, 18, 57, 0.95) 0%, rgba(190, 18, 60, 0.98) 100%);
+  border: 2px solid #FB7185;
+  box-shadow: 0 0 50px rgba(244, 63, 94, 0.5);
+}
+
+.result-overlay.res-warn {
+  background: rgba(124, 45, 18, 0.88);
+}
+.result-overlay.res-warn .result-card {
+  background: linear-gradient(180deg, rgba(154, 52, 18, 0.95) 0%, rgba(194, 65, 12, 0.98) 100%);
+  border: 2px solid #F97316;
+  box-shadow: 0 0 50px rgba(249, 115, 22, 0.5);
+}
+
+.result-overlay.res-offline {
+  background: rgba(30, 41, 59, 0.88);
+}
+.result-overlay.res-offline .result-card {
+  background: linear-gradient(180deg, rgba(51, 65, 85, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%);
+  border: 2px solid #94A3B8;
+  box-shadow: 0 0 50px rgba(148, 163, 184, 0.3);
+}
+
+.result-icon-circle {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+.result-icon-circle svg {
+  width: 44px;
+  height: 44px;
+}
+
+.result-verdict-title {
+  font-family: var(--f-display);
+  font-size: 34px !important;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  line-height: 1;
+}
+
+.result-attendee-name {
+  font-size: 28px !important;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.15;
+  word-break: break-word;
+}
+
+/* Full Width Tier Banner (Readable from 1 Metre Away) */
+.result-tier-banner {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--f-display);
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-sizing: border-box;
+}
+
+/* Tier Variants on Full Width Banner */
+.result-tier-banner.tier-vip {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+  color: #000000 !important;
+  border: 2px solid #FCD34D !important;
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.9), 0 0 10px #FDE68A !important;
+}
+
+.result-tier-banner.tier-backstage {
+  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%) !important;
+  color: #FFFFFF !important;
+  border: 2px solid #C4B5FD !important;
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.9), 0 0 10px #DDD6FE !important;
+}
+
+.result-tier-banner.tier-volunteer {
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%) !important;
+  color: #FFFFFF !important;
+  border: 2px solid #6EE7B7 !important;
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.9), 0 0 10px #A7F3D0 !important;
+}
+
+.result-tier-banner.tier-standard {
+  background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%) !important;
+  color: #FFFFFF !important;
+  border: 2px solid #7DD3FC !important;
+  box-shadow: 0 0 25px rgba(2, 132, 199, 0.7) !important;
+}
+
+.result-sub-detail {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.35;
+}
+
+.result-tap-hint {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+/* 5. Recent Activity List */
+.recent-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.recent-live-tag {
+  font-size: 10px;
+  font-family: monospace;
+  color: #38BDF8;
+  letter-spacing: 0.08em;
+}
+
+.gate-recent .recent-list li {
+  padding: 8px 10px;
+  min-height: 44px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.gate-recent .r-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* Find By Name Modal Upgrades */
+.find-admit-btn {
+  min-height: 40px !important;
+  padding: 6px 16px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+}
+
+.find-admit-btn.btn-confirm {
+  background: #F59E0B !important;
+  color: #000000 !important;
+  border-color: #FCD34D !important;
+  font-weight: 800 !important;
+}
 
 /* Glowing Tier Pill on Attendee Ticket */
 .t-tier-pill {
@@ -4737,6 +5216,27 @@ body {
   border: 1px solid #EC4899;
   color: #FBCFE8;
   box-shadow: 0 0 15px rgba(236, 72, 153, 0.35);
+}
+
+/* 2B. Volunteer Tier Style (Bright Emerald / Lime Electric Glow) */
+.tier-volunteer, .ticket-volunteer .ticket-badge {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.3) 100%) !important;
+  border-color: #10B981 !important;
+  color: #34D399 !important;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.45) !important;
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+.ticket-badge.tier-volunteer .dot {
+  background: #10B981 !important;
+  box-shadow: 0 0 10px #10B981 !important;
+}
+
+.t-tier-pill.tier-volunteer {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(4, 120, 87, 0.35) 100%) !important;
+  border: 1px solid #10B981;
+  color: #A7F3D0;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.35);
 }
 
 /* 3. Standard / General Tier Style (Electric Cyan / Emerald) */
@@ -4797,6 +5297,13 @@ body {
   box-shadow: 0 0 25px rgba(236, 72, 153, 0.8), 0 0 8px #FBCFE8 !important;
 }
 
+.scan-tier-banner.tier-volunteer {
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid #34D399 !important;
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.8), 0 0 8px #A7F3D0 !important;
+}
+
 .scan-tier-banner.tier-standard {
   background: linear-gradient(135deg, #0284C7 0%, #059669 100%) !important;
   color: #FFFFFF !important;
@@ -4830,6 +5337,45 @@ body {
   margin-left: 6px;
 }
 
+/* Inline Tier Selector in Organizer Pass List */
+.tier-select-inline {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  background: rgba(15, 23, 42, 0.9);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.tier-select-inline.tier-vip {
+  border: 1px solid #F59E0B;
+  color: #FCD34D;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
+}
+
+.tier-select-inline.tier-volunteer {
+  border: 1px solid #10B981;
+  color: #34D399;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+}
+
+.tier-select-inline.tier-backstage {
+  border: 1px solid #EC4899;
+  color: #F472B6;
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.35);
+}
+
+.tier-select-inline.tier-standard {
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38BDF8;
+}
+
 .mini-tier.tier-vip {
   background: rgba(245, 158, 11, 0.2);
   border: 1px solid rgba(245, 158, 11, 0.6);
@@ -4840,6 +5386,12 @@ body {
   background: rgba(236, 72, 153, 0.2);
   border: 1px solid rgba(236, 72, 153, 0.6);
   color: #F472B6;
+}
+
+.mini-tier.tier-volunteer {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.6);
+  color: #34D399;
 }
 
 .mini-tier.tier-standard {

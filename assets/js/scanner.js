@@ -131,6 +131,8 @@ export class Camera {
 export function tokenFrom(text) {
   if (!text) return null;
   const t = String(text).trim();
-  const m = t.match(/#\/?([A-Za-z0-9_-]{32,})\b/) || t.match(/^([A-Za-z0-9_-]{32,})$/);
-  return m ? m[1] : null;
+  const hashMatch = t.match(/#\/?([A-Za-z0-9_-]{10,})/);
+  if (hashMatch) return hashMatch[1];
+  const directMatch = t.match(/^([A-Za-z0-9_-]{10,})$/);
+  return directMatch ? directMatch[1] : null;
 }
