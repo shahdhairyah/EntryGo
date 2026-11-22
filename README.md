@@ -89,3 +89,4 @@ Plain HTML, CSS and JavaScript modules. No build step and nothing to install. To
 ## Licence
 
 MIT. Fonts are SIL OFL; vendored libraries keep their own licences ([vendor/LICENSES.md](vendor/LICENSES.md)).
+# EntryGo
