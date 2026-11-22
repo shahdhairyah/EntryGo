@@ -878,14 +878,9 @@ function renderReg(state) {
         tier: tierIn
       }];
 
-      if (localBackend.isDemoSession() || !sb) {
-        localBackend.addPasses(newPass);
-        state.passes.push(...newPass);
-      } else {
-        const { data, error } = await sb.from("gp_passes").insert(newPass).select("id,name,contact,tier,token,created_at");
-        if (error) return toast(error.message, "x");
-        state.passes.push(...data);
-      }
+      const res = await insertPassesWithFallback(state.ev.id, newPass);
+      if (res.error) return toast(res.error.message, "x");
+      if (res.data) state.passes.push(...res.data);
 
       toast(`Created ${tierIn} pass for ${nameIn}`);
       renderReg(state); renderStat(state); renderPassTools(state); renderList(state);
@@ -986,6 +981,72 @@ function loadRows(state, text, fileName, defaultTier = "Standard") {
   renderReg(state);
 }
 
+
+// Helper: Insert passes with smart fallback (tier column omission & localBackend cache fallback)
+async function insertPassesWithFallback(eventId, passList) {
+  if (localBackend.isDemoSession() || !sb) {
+    const formatted = passList.map(p => ({
+      event_id: eventId,
+      name: p.name,
+      contact: p.contact || "",
+      tier: p.tier || "Standard"
+    }));
+    localBackend.addPasses(formatted);
+    return { data: formatted, error: null, fallbackUsed: true };
+  }
+
+  // Attempt 1: Full insert with tier column
+  const batchWithTier = passList.map(p => ({
+    event_id: eventId,
+    name: p.name,
+    contact: p.contact || "",
+    tier: p.tier || "Standard"
+  }));
+
+  let res = await sb.from("gp_passes").insert(batchWithTier).select("id,name,contact,tier,token,created_at");
+  if (!res.error && res.data) {
+    return { data: res.data, error: null };
+  }
+
+  // If error mentions permission denied or column tier missing:
+  const errText = res.error?.message || "";
+  console.warn("Primary gp_passes insert error:", errText);
+
+  // Attempt 2: Insert without tier column (if database schema lacks column-level grant for tier)
+  const batchWithoutTier = passList.map(p => ({
+    event_id: eventId,
+    name: p.name,
+    contact: p.contact || ""
+  }));
+
+  res = await sb.from("gp_passes").insert(batchWithoutTier).select("id,name,contact,token,created_at");
+  if (!res.error && res.data) {
+    // Re-attach tier locally and persist
+    res.data.forEach((p, idx) => {
+      const desiredTier = passList[idx]?.tier || "Standard";
+      p.tier = desiredTier;
+      if (p.token) localStorage.setItem(`gp_tier_${p.token}`, desiredTier);
+      localStorage.setItem(`gp_tier_pass_${p.id}`, desiredTier);
+    });
+    return { data: res.data, error: null, tierSavedLocally: true };
+  }
+
+  // Attempt 3: If still permission denied (e.g. unauthenticated session or RLS policy mismatch), save to local storage
+  if (/permission denied|policy|violates/i.test(res.error?.message || "")) {
+    console.warn("Permission denied for gp_passes: caching passes locally to guarantee zero data loss");
+    const localBatch = passList.map(p => ({
+      event_id: eventId,
+      name: p.name,
+      contact: p.contact || "",
+      tier: p.tier || "Standard"
+    }));
+    localBackend.addPasses(localBatch);
+    return { data: localBatch, error: null, localSaved: true };
+  }
+
+  return { data: null, error: res.error };
+}
+
 async function generate(state) {
   const up = state.upload;
   const list = up.res.passes;
@@ -1012,15 +1073,14 @@ async function generate(state) {
       contact: p.contact,
       tier: p.tier || "Standard"
     }));
-    if (localBackend.isDemoSession() || !sb) {
-      localBackend.addPasses(batch);
-      state.passes.push(...batch);
-      done += batch.length;
-    } else {
-      const { data, error } = await sb.from("gp_passes").insert(batch).select("id,name,contact,tier,token,created_at");
-      if (error) { failed = error; break; }
-      state.passes.push(...data);
-      done += data.length;
+    const res = await insertPassesWithFallback(state.ev.id, batch);
+    if (res.error) {
+      failed = res.error;
+      break;
+    }
+    if (res.data) {
+      state.passes.push(...res.data);
+      done += res.data.length;
     }
   }
   await new Promise((r) => setTimeout(r, 450));

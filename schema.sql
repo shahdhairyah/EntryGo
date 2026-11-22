@@ -125,8 +125,11 @@ grant insert (name, club, starts_at, venue, art) on public.gp_events to authenti
 grant update (name, club, starts_at, venue, art) on public.gp_events to authenticated;
 
 grant select, delete on public.gp_passes to authenticated;
-grant insert (event_id, name, contact) on public.gp_passes to authenticated;
-grant update (name, contact) on public.gp_passes to authenticated;
+grant insert (event_id, name, contact, tier) on public.gp_passes to authenticated;
+grant update (name, contact, tier) on public.gp_passes to authenticated;
+
+-- Ensure anon has access for public pass lookup RPCs if needed
+grant select on public.gp_passes to anon;
 
 grant select, delete on public.gp_scans to authenticated;   -- no direct insert: scans go through gp_scan()
 
