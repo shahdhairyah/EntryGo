@@ -4,20 +4,85 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>EntryGo · Free QR passes for your club event</title>
+  <title>EntryGo · Free QR Passes & High-Velocity Gate Admission for Club Events</title>
   <meta name="description"
-    content="Upload your registrations sheet, everyone gets a QR pass, any phone becomes the gate scanner. Screenshots work once. Free and open source.">
-  <meta name="theme-color" content="#090D16">
-  <meta property="og:title" content="EntryGo: free QR entry for club events">
+    content="Free, high-speed QR pass generator and mobile gate scanner for club events, concerts, college fests, and parties. Cryptographic 192-bit QR verification with instant mobile camera scanning.">
+  <meta name="keywords" content="QR code event ticket, event pass generator, QR gate scanner, event check-in app, club event ticket, free ticket scanner, digital event pass, entry pass generator">
+  <meta name="author" content="Shah Dhairya">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <link rel="canonical" href="https://entrygo.live/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://entrygo.live/">
+  <meta property="og:title" content="EntryGo · High-Velocity QR Passes & Gate Admission System">
   <meta property="og:description"
-    content="Upload your registrations. Everyone gets a pass. Any phone scans at the gate. Screenshots work once.">
-  <meta property="og:image" content="assets/art/crowd.jpg">
+    content="Upload registrations, instantly generate cryptographic QR passes, and turn any smartphone into a fast gate scanner. Free, secure, zero app downloads.">
+  <meta property="og:image" content="https://entrygo.live/assets/art/crowd.jpg">
+  <meta property="og:site_name" content="EntryGo">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://entrygo.live/">
+  <meta name="twitter:title" content="EntryGo · High-Velocity QR Event Admission Engine">
+  <meta name="twitter:description"
+    content="Generate secure cryptographic QR passes in seconds. Any smartphone scans at the gate. Zero app installs required.">
+  <meta name="twitter:image" content="https://entrygo.live/assets/art/crowd.jpg">
+
+  <meta name="theme-color" content="#090D16">
   <link rel="icon" href="assets/img/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/img/icon.svg">
   <link rel="preload" href="assets/fonts/oswald-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/css/gatepass.css">
   <script defer src="config.js"></script>
   <script defer src="vendor/supabase.js"></script>
   <script type="module" src="assets/js/organiser.js"></script>
+
+  <!-- Structured Data: WebApplication & SoftwareApplication Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://entrygo.live/#app",
+        "name": "EntryGo",
+        "url": "https://entrygo.live/",
+        "description": "High-velocity cryptographic QR pass generation and gate admission scanner for club events, colleges, and festivals.",
+        "applicationCategory": "EventManagementApplication",
+        "operatingSystem": "All modern browsers (iOS, Android, Windows, macOS, Linux)",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "Shah Dhairya",
+          "url": "https://www.shahdhairyah.in/"
+        }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://entrygo.live/#organization",
+        "name": "EntryGo",
+        "url": "https://entrygo.live/",
+        "logo": "https://entrygo.live/assets/img/logo.png",
+        "founder": {
+          "@type": "Person",
+          "name": "Shah Dhairya",
+          "url": "https://www.shahdhairyah.in/"
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "email": "entrygo.live@shahdhairyah.in",
+          "contactType": "technical support"
+        }
+      }
+    ]
+  }
+  </script>
 
   <link rel="manifest" href="./manifest.json">
   <script>
