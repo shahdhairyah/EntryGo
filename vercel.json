@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/admin/:path*",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/sitemap.xml",
