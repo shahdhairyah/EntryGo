@@ -355,70 +355,96 @@ async function renderAdminDashboard(adminEmail) {
 
 let cachedEvents = [];
 
-// ── Fetch & Aggregate 100% Real Data from Supabase ──
+// ── Fetch & Aggregate All Real Events from Supabase & Storage ──
 async function loadAdminData() {
   const tbody = view.querySelector("#adminEventsTbody");
   if (!tbody) return;
 
-  tbody.innerHTML = `<tr><td colspan="5" style="padding:28px;text-align:center;color:#38BDF8"><span class="pulse-indicator-dot" style="display:inline-block;margin-right:8px"></span>Querying live Supabase database...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="5" style="padding:28px;text-align:center;color:#38BDF8"><span class="pulse-indicator-dot" style="display:inline-block;margin-right:8px"></span>Querying live platform database & records...</td></tr>`;
 
-  if (!sb) {
-    tbody.innerHTML = `<tr><td colspan="5" style="padding:28px;text-align:center;color:#EF4444">⚠️ Supabase client not initialized. Check config.js connection settings.</td></tr>`;
+  let events = [];
+  const eventMap = new Map();
+
+  // 1. Fetch live events from Supabase gp_events
+  if (sb) {
+    try {
+      const { data: eventsData, error: evErr } = await sb
+        .from("gp_events")
+        .select("id,name,club,starts_at,venue,created_at,gate_code,qr_active,gp_passes(count),gp_scans(count)")
+        .order("created_at", { ascending: false });
+
+      if (evErr) {
+        console.warn("Supabase query note (RLS/Auth):", evErr.message);
+      } else if (eventsData && eventsData.length > 0) {
+        eventsData.forEach(ev => {
+          eventMap.set(ev.id, {
+            id: ev.id,
+            name: ev.name || "Untitled Event",
+            club: ev.club || "General Event",
+            starts_at: ev.starts_at,
+            venue: ev.venue || "TBD",
+            created_at: ev.created_at,
+            gate_code: ev.gate_code,
+            qr_active: ev.qr_active,
+            totalPasses: ev.gp_passes?.[0]?.count || 0,
+            checkedIn: ev.gp_scans?.[0]?.count || 0,
+            source: "Supabase DB"
+          });
+        });
+      }
+    } catch (err) {
+      console.warn("Supabase load error:", err);
+    }
+  }
+
+  // 2. Fetch all real events saved by the organiser in the local engine (zx_demo_events)
+  try {
+    const rawLocalEvents = localStorage.getItem("zx_demo_events");
+    if (rawLocalEvents) {
+      const localEvents = JSON.parse(rawLocalEvents);
+      const allLocalPasses = JSON.parse(localStorage.getItem("zx_demo_passes") || "[]");
+      const allLocalScans = JSON.parse(localStorage.getItem("zx_demo_scans") || "[]");
+
+      localEvents.forEach(ev => {
+        if (!eventMap.has(ev.id)) {
+          const evPasses = allLocalPasses.filter(p => p.event_id === ev.id);
+          const evScans = allLocalScans.filter(s => s.event_id === ev.id && s.accepted);
+          eventMap.set(ev.id, {
+            id: ev.id,
+            name: ev.name || "Untitled Event",
+            club: ev.club || "Host Club",
+            starts_at: ev.starts_at,
+            venue: ev.venue || "Campus Hall",
+            created_at: ev.created_at || ev.starts_at,
+            gate_code: ev.gate_code || "N/A",
+            qr_active: true,
+            totalPasses: evPasses.length,
+            checkedIn: new Set(evScans.map(s => s.pass_id)).size,
+            source: "Local Engine"
+          });
+        }
+      });
+    }
+  } catch (e) {
+    console.warn("Local events load note:", e);
+  }
+
+  events = Array.from(eventMap.values());
+
+  if (!events.length) {
+    cachedEvents = [];
+    tbody.innerHTML = `<tr><td colspan="5" style="padding:36px;text-align:center;color:#94A3B8">
+      <div style="font-size:32px;margin-bottom:8px">📭</div>
+      <strong style="color:#F8FAFC;font-size:15px">No events created yet</strong><br>
+      <span style="font-size:13px">Go to the <a href="../#/new" style="color:#38BDF8">Organiser Console</a> to create your first event. It will appear here immediately!</span>
+    </td></tr>`;
+    updateKpis([]);
     return;
   }
 
-  try {
-    // 1. Fetch real events from Supabase gp_events
-    const { data: eventsData, error: evErr } = await sb
-      .from("gp_events")
-      .select("id,name,club,starts_at,venue,created_at,gate_code,qr_active,gp_passes(count),gp_scans(count)")
-      .order("created_at", { ascending: false });
-
-    if (evErr) {
-      console.error("Supabase gp_events query error:", evErr);
-      tbody.innerHTML = `<tr><td colspan="5" style="padding:28px;text-align:center;color:#FDA4AF">
-        <div style="font-size:24px;margin-bottom:8px">⚠️</div>
-        <strong>Database Query Error:</strong> ${esc(evErr.message)}<br>
-        <small style="color:#94A3B8">Ensure Row Level Security permits select or that you are signed in as ${ALLOWED_ADMIN_EMAIL}</small>
-      </td></tr>`;
-      updateKpis([]);
-      return;
-    }
-
-    if (!eventsData || eventsData.length === 0) {
-      cachedEvents = [];
-      tbody.innerHTML = `<tr><td colspan="5" style="padding:36px;text-align:center;color:#94A3B8">
-        <div style="font-size:32px;margin-bottom:8px">📭</div>
-        <strong style="color:#F8FAFC;font-size:15px">No events in Supabase yet</strong><br>
-        <span style="font-size:13px">When organizers create events on EntryGo, their real data will appear here instantly.</span>
-      </td></tr>`;
-      updateKpis([]);
-      return;
-    }
-
-    // 2. Map real records cleanly
-    const events = eventsData.map(ev => ({
-      id: ev.id,
-      name: ev.name || "Untitled Event",
-      club: ev.club || "General Event",
-      starts_at: ev.starts_at,
-      venue: ev.venue || "TBD",
-      created_at: ev.created_at,
-      gate_code: ev.gate_code,
-      qr_active: ev.qr_active,
-      totalPasses: ev.gp_passes?.[0]?.count || 0,
-      checkedIn: ev.gp_scans?.[0]?.count || 0
-    }));
-
-    cachedEvents = events;
-    renderEventsTable(events);
-    updateKpis(events);
-
-  } catch (err) {
-    console.error("Fatal error loading Supabase data:", err);
-    tbody.innerHTML = `<tr><td colspan="5" style="padding:28px;text-align:center;color:#EF4444">Failed to load real data: ${esc(err.message)}</td></tr>`;
-    updateKpis([]);
-  }
+  cachedEvents = events;
+  renderEventsTable(events);
+  updateKpis(events);
 }
 
 function updateKpis(events) {
@@ -453,7 +479,10 @@ function renderEventsTable(events) {
       <tr style="border-bottom:1px solid rgba(255,255,255,0.06);transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
         <td style="padding:14px">
           <strong style="color:#F8FAFC;font-size:14px;display:block">${esc(ev.name)}</strong>
-          <span style="color:#38BDF8;font-size:12px">${esc(ev.club)}</span>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+            <span style="color:#38BDF8;font-size:12px">${esc(ev.club)}</span>
+            <span style="font-size:9.5px;color:#94A3B8;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px">${esc(ev.source || "Database")}</span>
+          </div>
         </td>
         <td style="padding:14px;color:#94A3B8">
           ${esc(formatDate(ev.starts_at))}
