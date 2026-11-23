@@ -4,8 +4,7 @@ Allow: /
 Allow: /p/
 Allow: /gate/
 
-# Disallow private admin panel, vendor dependencies and internal configuration files
-Disallow: /admin/
+# Disallow private vendor dependencies and internal configuration files
 Disallow: /vendor/
 Disallow: /config.js
 
