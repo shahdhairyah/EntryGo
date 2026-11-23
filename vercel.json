@@ -15,6 +15,10 @@
     {
       "source": "/p",
       "destination": "/p/index.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin/index.html"
     }
   ],
   "headers": [
